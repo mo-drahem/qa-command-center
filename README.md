@@ -1,191 +1,159 @@
 # QA Command Center
 
-A QA tool that generates a chronological **User Story** from tracer logs using AI summarization.
+QA Command Center is a web tool for QA teams to analyze OMS traces, generate AI narratives, validate math/totals, run fast-track business scenarios, and inspect JSON responses in a readable viewer.
+
+## What It Does
+
+- Generate narrative reports from tracer logs (`dev`/`staging`).
+- Extract and display vital business data (app-id, email, totals, product context).
+- Run AI + deterministic math validation focused on pricing/totals structures.
+- Lookup OMS entities by order number, order id, cart id, or sale id.
+- Check coupon conflicts before creation (duplicate identifiers + condition overlap).
+- Execute guided fast-track scenarios (cart/sale steps) directly from UI.
+- Render request/response payloads with a code/tree JSON viewer.
 
 ## Tech Stack
 
-| Layer    | Tech                           |
-|----------|-------------------------------|
-| Frontend | React + Vite + Tailwind CSS v4 |
-| Backend  | Node.js + Express              |
-| HTTP     | Axios                          |
-| Toast    | react-hot-toast                |
-| Config   | .env files                     |
+- Frontend: React, Vite, Tailwind CSS
+- Backend: Node.js, Express
+- HTTP: Axios
+- AI: Gemini API (with fallback behavior)
 
----
+## Project Structure
+
+```text
+backend/
+  src/
+    config/
+    routes/
+    services/
+  .env.example
+
+frontend/
+  src/
+  vite.config.js
+
+add-product-to-cart.json
+frontend/add-hotel-product-to-cart.json
+```
+
+## Prerequisites
+
+- Node.js 18+ (recommended)
+- npm
+- Network access to internal OMS services used by your environment
 
 ## Setup
 
-### Prerequisites
-- Node.js ≥ 18
-
-### 1. Clone the repository
+1) Install dependencies
 
 ```bash
-git clone https://github.com/mo-drahem/qa-command-center.git
-cd qa-command-center
+cd backend && npm install
+cd ../frontend && npm install
 ```
 
-### 2. Configure the backend
+2) Configure backend environment
 
 ```bash
 cp backend/.env.example backend/.env
 ```
 
-Edit `backend/.env` with your real values:
+Required/important keys in `backend/.env`:
 
-| Variable                        | Description                                     | Default |
-|---------------------------------|-------------------------------------------------|---------|
-| `PORT`                          | Port the Express server listens on              | `4000`  |
-| `LOGGING_API_DEV_BASE_URL`      | Base URL of the logging service (dev env)       | —       |
-| `LOGGING_API_STAGING_BASE_URL`  | Base URL of the logging service (staging env)   | —       |
-| `LOGGING_API_DEFAULT_ENV`       | Fallback environment when none is specified     | `dev`   |
-| `COPILOT_MODEL`                 | AI model name (e.g. `gpt-4o`)                   | —       |
-| `COPILOT_API_KEY`               | API key for the Copilot/AI provider             | —       |
+- `PORT` (default `4000`)
+- `LOGGING_API_DEV_BASE_URL`
+- `LOGGING_API_STAGING_BASE_URL`
+- `LOGGING_API_DEFAULT_ENV` (`dev` or `staging`)
+- `GEMINI_MODEL` (use: `gemini-3.1-flash-lite-preview`)
+- `GEMINI_API_KEY`
+- `GEMINI_TIMEOUT_MS` (default: `90000`)
 
-> **Note**: `COPILOT_API_KEY` is optional. When omitted, the backend uses a robust **local fallback summarizer** (see Fallback Behavior below).
+Optional legacy keys:
 
-### 3. Install dependencies
+- `COPILOT_MODEL`
+- `COPILOT_API_KEY`
+
+Example:
+
+```env
+PORT=4000
+LOGGING_API_DEFAULT_ENV=dev
+GEMINI_MODEL=gemini-3.1-flash-lite-preview
+GEMINI_TIMEOUT_MS=90000
+GEMINI_API_KEY=your_key_here
+```
+
+## Run Locally
+
+Backend:
 
 ```bash
-# Backend
-cd backend && npm install
-
-# Frontend
-cd ../frontend && npm install
+cd backend
+npm run dev
 ```
 
----
-
-## Run Commands
-
-### Development
+Frontend:
 
 ```bash
-# Backend (auto-restarts on file change via --watch)
-cd backend && npm run dev
-
-# Frontend (Vite dev server with HMR, proxies /api → localhost:4000)
-cd frontend && npm run dev
+cd frontend
+npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser.
+Open `http://localhost:5173`.
 
-### Production Build
+The frontend proxies `/api/*` to `http://localhost:4000` (configured in `frontend/vite.config.js`).
 
-```bash
-# Build frontend static assets
-cd frontend && npm run build
+## Main API Endpoints
 
-# Start backend in production mode
-cd backend && npm start
-```
+All routes are under `/api/logger`:
 
----
+- `POST /narrative`
+- `POST /lookup`
+- `POST /coupon-conflicts`
+- `POST /promotion-risk`
+- `POST /business-scenario-step`
+- `GET /fast-track/scenarios`
+- `GET /fast-track/templates/add-flight-product-body`
+- `GET /fast-track/templates/add-hotel-product-body`
+- `GET /fast-track/templates/prepare-body`
+- `POST /fast-track/execute`
 
-## API Contract
+Health check:
 
-### `POST /api/logger/narrative`
+- `GET /health`
 
-**Request body**
+## Fast-Track Scenarios
 
-```json
-{
-  "tracerId": "abc-123-xyz",
-  "environment": "dev"
-}
-```
+Fast-track scenarios let QA execute common multi-step flows quickly from UI without manually rebuilding requests in Postman.
 
-| Field         | Type                   | Required | Description                      |
-|---------------|------------------------|----------|----------------------------------|
-| `tracerId`    | `string`               | ✅       | Non-empty tracer ID              |
-| `environment` | `"dev"` \| `"staging"` | No       | Defaults to `dev`                |
+Current scenarios:
 
-**Success response (200)**
+- `Scenario 1 - Cart + Flight`
+  - `createEmptyCart`
+  - `addFlightProduct`
+- `Scenario 2 - Cart + Hotel`
+  - `createEmptyCartHotel`
+  - `addHotelProduct`
+- `Scenario 3 - Sale + Flight`
+  - `createSaleWithFlightProduct`
+  - `prepareSaleCheckout`
+  - `checkoutSale`
 
-```json
-{
-  "tracerId": "abc-123-xyz",
-  "environment": "dev",
-  "story": "## QA Narrative\n...",
-  "logs": [
-    {
-      "serviceName": "auth-service",
-      "requestURI": "/api/auth/login",
-      "method": "POST",
-      "statusCode": 200,
-      "timestamp": "2024-01-15T10:30:00.000Z"
-    }
-  ]
-}
-```
+Current backend scenario definitions are exposed by:
 
-**Error responses**
+- `GET /api/logger/fast-track/scenarios`
 
-| Status | Condition                     |
-|--------|-------------------------------|
-| 400    | `tracerId` missing or empty   |
-| 400    | `environment` not dev/staging |
-| 500    | Logging service unreachable   |
+Step requests are executed via:
 
-**Health check**
+- `POST /api/logger/fast-track/execute`
 
-```
-GET /health  →  { "status": "ok" }
-```
+## Notes
 
----
+- Cart/sale IDs and totals are propagated across steps when detected in responses.
+- Fast-track request headers are standardized for QA runs (`app-id`, `x-currency`, `x-user-email`, `x-user-id`, `Content-Type`).
+- If Gemini is unavailable or rate-limited, the backend uses fallback behavior so reports still render.
+- If Gemini calls time out, increase `GEMINI_TIMEOUT_MS` and restart backend.
 
-## Fallback Behavior
+## License
 
-When the AI provider is unavailable (no API key, rate-limited, or network error), the backend **does not fail the endpoint**. Instead, it returns a locally-generated narrative that includes:
-
-- **Flow Timeline** – all captured API calls in chronological order
-- **Stop Point** – the last call made in the trace
-- **Error Detection** – any HTTP status codes ≥ 400 are highlighted
-- **Reason** – a plain-English explanation of why the fallback was used
-
-Example fallback output:
-
-```
-## Fallback QA Narrative *(AI provider unavailable)*
-
-> _Reason: No AI provider API key configured (COPILOT_API_KEY is not set)_
-
-### Flow Timeline
-  1. GET /api/users (user-service) — 200 @ 2024-01-15T10:30:01.000Z
-  2. POST /api/orders (order-service) — 422 @ 2024-01-15T10:30:02.000Z
-
-### Stop Point
-The last captured call was:
-- POST /api/orders (order-service) — Status 422 at 2024-01-15T10:30:02.000Z
-
-### ⚠️ Errors Detected
-- HTTP 422 on `/api/orders` (order-service) at 2024-01-15T10:30:02.000Z
-```
-
----
-
-## Architecture
-
-```
-backend/
-  src/
-    config/env.js          — Environment config + URL resolver
-    services/
-      loggingApi.js        — Fetches raw logs from external service
-      aiNarrative.js       — AI provider + local fallback summarizer
-    routes/
-      loggerRoutes.js      — POST /narrative route
-    index.js               — Express app + centralized error middleware
-
-frontend/
-  src/
-    api/
-      client.js            — Axios instance (baseURL=/api)
-      loggerApi.js         — generateNarrative() API call
-    components/
-      LoggerView.jsx       — Single-page logger UI
-    App.jsx                — Root component with Toaster
-    main.jsx               — React entry point
-```
+Internal QA tooling (project-specific usage).

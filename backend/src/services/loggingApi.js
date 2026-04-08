@@ -29,11 +29,27 @@ async function fetchLogs(tracerId, environment) {
     );
   }
 
-  const url = `${baseUrl}/logs/list`;
-  const response = await axios.get(url, {
-    params: { tracerId },
-    timeout: 10000,
-  });
+  const trimmedBase = baseUrl.trim();
+  const hasQueryTracer = /[?&]tracerId=/.test(trimmedBase);
+  const url = hasQueryTracer
+    ? `${trimmedBase}${encodeURIComponent(tracerId || '')}`
+    : `${trimmedBase.replace(/\/$/, '')}/logs/list`;
+
+  let response;
+  try {
+    response = await axios.get(url, hasQueryTracer ? { timeout: 10000 } : {
+      params: { tracerId },
+      timeout: 10000,
+    });
+  } catch (error) {
+    if (error && error.code === 'ENOTFOUND') {
+      throw new Error(
+        `Logging service host cannot be resolved: ${url}. ` +
+        'Check LOGGING_API_DEV_BASE_URL / LOGGING_API_STAGING_BASE_URL in backend/.env.'
+      );
+    }
+    throw error;
+  }
 
   // Normalise: the service may wrap logs in a `data` key or return an array directly.
   const body = response.data;
