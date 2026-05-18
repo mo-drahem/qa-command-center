@@ -126,14 +126,12 @@ Runtime fields (`cart-id`, `sale-id`, `rule-id`) update the URL before execute. 
 
 Definitions: `backend/src/config/fastTrackScenarios.js`
 
-## Tests & CI
+## Tests
 
 ```bash
 cd backend && npm test
 cd frontend && npm run test && npm run lint && npm run build
 ```
-
-GitHub Actions: `.github/workflows/ci.yml` runs frontend lint/test/build and backend tests.
 
 ## Architecture
 
