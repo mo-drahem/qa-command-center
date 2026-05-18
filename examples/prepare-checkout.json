@@ -1,0 +1,32 @@
+{
+    "type": "flight",
+    "payment": {
+        "attachments": ["add prod"],
+        "bankBranch": "updatedddddddd",
+        "bankName": "Etihad",
+        "card": {
+            "cvv": "257",
+            "expiryMonth": "06",
+            "expiryYear": "2029",
+            "name": "SHAMS AHMAD ALAFEEF",
+            "number": "5436031030606378",
+            "token": "token123",
+            "type": "type",
+            "encryptedNumber": "encrypted-number",
+            "bn": "109298",
+            "last4": "updated"
+        },
+        "chargeId": "charge-id",
+        "description": "description",
+        "iban": "JO17OAIX4159848538471356488338",
+        "paymentMethod": "tabby",
+        "paymentType": "payment-type",
+        "referenceId": "reference-id",
+        "source": "source",
+        "type": "type"
+    },
+  
+    "total": 327.75,
+    "isPaid": true,
+    "cartId": "cart-bafca779-14fd-4c9f-8a64-c77f5fc5c737"
+}

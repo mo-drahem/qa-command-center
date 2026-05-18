@@ -1,0 +1,24 @@
+{
+  "contact": {
+    "title": "Ms",
+    "firstName": "QA",
+    "lastName": "User",
+    "phone": "+962795526408",
+    "email": "qa.user@example.com",
+    "customerId": null,
+    "countryId": null
+  },
+  "payment": {
+    "method": "checkoutcom",
+    "source": null,
+    "card": {
+      "expiryYear": "0",
+      "expiryMonth": "01",
+      "number": "5436031030661123",
+      "name": "d",
+      "cvv": ""
+    }
+  },
+  "isManual": true,
+  "isManualOrder": true
+}

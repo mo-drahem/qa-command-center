@@ -5,7 +5,7 @@ import client from './client';
  *
  * @param {string} tracerId - The tracer ID to look up.
  * @param {'dev'|'staging'} environment - Target environment.
- * @returns {Promise<{ tracerId: string, environment: string, story: string, insights?: object, aiProvider?: string, aiReason?: string, mathValidation?: object, logs: object[] }>}
+ * @returns {Promise<{ tracerId: string, environment: string, story: string, insights?: object, aiProvider?: string, aiReason?: string, tokenUsage?: { provider: string, promptTokens: number, completionTokens: number, totalTokens: number } | null, mathValidation?: object, logs: object[] }>}
  */
 export async function generateNarrative(tracerId, environment) {
   const response = await client.post('/logger/narrative', { tracerId, environment });
@@ -16,7 +16,7 @@ export async function generateNarrative(tracerId, environment) {
  * Lookup OMS entities by identifier.
  *
  * @param {'dev'|'staging'} environment
- * @param {'orderNumber'|'orderId'|'cartId'|'saleId'} lookupType
+ * @param {'orderNumber'|'orderId'|'cartId'|'saleId'|'couponCodes'} lookupType
  * @param {string} value
  * @returns {Promise<{ environment: string, lookupType: string, value: string, sourceUrl: string, data: any }>}
  */
@@ -63,6 +63,28 @@ export async function runBusinessScenarioStep(environment, step, payload = {}) {
     environment,
     step,
     ...payload,
+  });
+  return response.data;
+}
+
+export async function getBusinessActions() {
+  const response = await client.get('/logger/business-actions');
+  return response.data;
+}
+
+export async function getBusinessActionDraft(environment, actionId, runtime = {}) {
+  const response = await client.get(`/logger/business-actions/${encodeURIComponent(actionId)}/draft`, {
+    params: { environment, runtime: JSON.stringify(runtime) },
+  });
+  return response.data;
+}
+
+export async function executeBusinessAction(environment, actionId, runtime = {}, override = {}) {
+  const response = await client.post('/logger/business-actions/execute', {
+    environment,
+    actionId,
+    runtime,
+    override,
   });
   return response.data;
 }

@@ -112,5 +112,5 @@ async function simulatePromotionRisk({ environment, newRule, activeRules }) {
   return { provider: 'gemini', reason: null, result: parsed };
 }
 
-module.exports = { simulatePromotionRisk };
+module.exports = { simulatePromotionRisk, fallbackSimulation };
 

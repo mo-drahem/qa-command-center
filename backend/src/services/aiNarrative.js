@@ -375,6 +375,35 @@ function parseJsonFromText(text) {
   }
 }
 
+function normalizeTokenUsage(rawUsage = {}, provider) {
+  const promptTokens = Number(
+    rawUsage.promptTokenCount ??
+      rawUsage.prompt_tokens ??
+      rawUsage.input_tokens ??
+      0
+  );
+  const completionTokens = Number(
+    rawUsage.candidatesTokenCount ??
+      rawUsage.completion_tokens ??
+      rawUsage.output_tokens ??
+      0
+  );
+  const totalTokens = Number(
+    rawUsage.totalTokenCount ??
+      rawUsage.total_tokens ??
+      promptTokens + completionTokens
+  );
+
+  if (!Number.isFinite(totalTokens) || totalTokens <= 0) return null;
+
+  return {
+    provider,
+    promptTokens: Number.isFinite(promptTokens) ? promptTokens : 0,
+    completionTokens: Number.isFinite(completionTokens) ? completionTokens : 0,
+    totalTokens,
+  };
+}
+
 async function callCopilotInsights(logs) {
   const apiKey = env.COPILOT_API_KEY;
   const model = env.COPILOT_MODEL || 'gpt-4o';
@@ -502,7 +531,10 @@ ${logLines}`;
     }
   );
 
-  return parseJsonFromText(response.data?.choices?.[0]?.message?.content || '');
+  return {
+    insights: parseJsonFromText(response.data?.choices?.[0]?.message?.content || ''),
+    tokenUsage: normalizeTokenUsage(response.data?.usage || {}, 'copilot'),
+  };
 }
 
 async function callGeminiInsights(logs) {
@@ -588,7 +620,10 @@ async function callGeminiInsights(logs) {
     ?.map((p) => p?.text || '')
     .join('\n')
     .trim();
-  return parseJsonFromText(text || '');
+  return {
+    insights: parseJsonFromText(text || ''),
+    tokenUsage: normalizeTokenUsage(response.data?.usageMetadata || {}, 'gemini'),
+  };
 }
 
 async function generateNarrative(logs) {
@@ -596,13 +631,14 @@ async function generateNarrative(logs) {
 
   if (env.GEMINI_API_KEY) {
     try {
-      const aiInsights = await callGeminiInsights(logs);
-      if (aiInsights) {
-        aiInsights.vitalData = mergeAndFixVitalData(aiInsights.vitalData, logs);
+      const aiResult = await callGeminiInsights(logs);
+      if (aiResult?.insights) {
+        aiResult.insights.vitalData = mergeAndFixVitalData(aiResult.insights.vitalData, logs);
         return {
-          story: buildStoryFromInsights(aiInsights, 'Gemini QA Narrative'),
-          insights: aiInsights,
+          story: buildStoryFromInsights(aiResult.insights, 'Gemini QA Narrative'),
+          insights: aiResult.insights,
           provider: 'gemini',
+          tokenUsage: aiResult.tokenUsage,
         };
       }
       return {
@@ -610,6 +646,7 @@ async function generateNarrative(logs) {
         insights: heuristicInsights,
         provider: 'fallback',
         reason: 'Gemini returned non-JSON output',
+        tokenUsage: null,
       };
     } catch (err) {
       const details = err?.response?.data?.error?.message || err?.response?.data?.error?.status || '';
@@ -621,18 +658,20 @@ async function generateNarrative(logs) {
         insights: heuristicInsights,
         provider: 'fallback',
         reason,
+        tokenUsage: null,
       };
     }
   }
 
   if (env.COPILOT_API_KEY) {
     try {
-      const aiInsights = await callCopilotInsights(logs);
-      if (aiInsights) {
+      const aiResult = await callCopilotInsights(logs);
+      if (aiResult?.insights) {
         return {
-          story: buildStoryFromInsights(aiInsights, 'Copilot QA Narrative'),
-          insights: aiInsights,
+          story: buildStoryFromInsights(aiResult.insights, 'Copilot QA Narrative'),
+          insights: aiResult.insights,
           provider: 'copilot',
+          tokenUsage: aiResult.tokenUsage,
         };
       }
       return {
@@ -640,6 +679,7 @@ async function generateNarrative(logs) {
         insights: heuristicInsights,
         provider: 'fallback',
         reason: 'AI provider returned non-JSON output',
+        tokenUsage: null,
       };
     } catch (err) {
       const reason = err.response
@@ -650,6 +690,7 @@ async function generateNarrative(logs) {
         insights: heuristicInsights,
         provider: 'fallback',
         reason,
+        tokenUsage: null,
       };
     }
   }
@@ -659,6 +700,7 @@ async function generateNarrative(logs) {
     insights: heuristicInsights,
     provider: 'fallback',
     reason: 'No AI provider API key configured (set GEMINI_API_KEY or COPILOT_API_KEY)',
+    tokenUsage: null,
   };
 }
 

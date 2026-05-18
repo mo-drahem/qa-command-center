@@ -1,16 +1,30 @@
-# React + Vite
+# QA Command Center Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Purpose
 
-Currently, two official plugins are available:
+This app provides QA operators with three main tools:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Narrative generation from tracing logs.
+- OMS entity lookup.
+- Fast-track multi-step business scenarios.
 
-## React Compiler
+## Commands
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+npm run dev
+npm run lint
+npm run test
+npm run build
+```
 
-## Expanding the ESLint configuration
+## Architecture Notes
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- API calls are centralized in `src/api/`.
+- Reusable domain helpers are in `src/domain/`.
+- Fast-track default identity values use explicit QA-safe placeholders from `src/config/fastTrackDefaults.js`.
+
+## Data Safety
+
+- Do not commit real customer identifiers, payment card data, CVV, or bank details.
+- Keep fixture values synthetic (`qa.user@example.com`, `qa-user-id`, etc.).

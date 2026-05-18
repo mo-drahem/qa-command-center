@@ -1,0 +1,73 @@
+{
+  "code": "RULE-JCD5-JCD5",
+  "name": "TEST-multiplier-error",
+  "description": "RULE-JCD5-JCD5",
+  "fromDate": "2000-01-01T00:00:00",
+  "toDate": "2100-01-01T00:00:00",
+  "depDate": null,
+  "email": null,
+  "productType": ["all"],
+  "entityId": "ALM",
+  "category": null,
+  "clientCode": [],
+  "active": true,
+  "registered": false,
+  "priority": 999999999999,
+  "stop": false,
+  "maxAmount": 1000000,
+  "minAmount": 0,
+  "appId": [51],
+  "maxUsage": -1,
+  "maxUsageEmail": -1,
+  "vatCode": "follow_product",
+  "deleted": false,
+  "multiplier": {
+    "multiplierField": "seat",
+    "multiplierValueField": "amount",
+    "isMultiplier": false
+  },
+  "scheduler": null,
+  "condition": [
+    {
+      "operator": ">",
+      "matchingCriteria": null,
+      "cartVariable": "total",
+      "value": "0",
+      "messages": null
+    }
+  ],
+  "action": {
+    "operation": "subtract",
+    "amount": "60",
+    "percentage": false,
+    "based": "Total",
+    "label": "MDR_TEST",
+    "errorMSG": null
+  },
+  "maxContactEmailUsageAppIds": [],
+  "maxContactEmailUsage": -1,
+  "maxPaymentUsage": -1,
+  "maxPeriodDays": -1,
+  "matchCondition": "and",
+  "parentId": null,
+  "hierarchyType": "STANDALONE",
+  "businessType": "UNIQUE",
+  "lastModifiedUser": "nibz",
+  "disableCoupons": false,
+  "ruleType": "rule",
+  "promotionType": "SERVICE_FEE",
+  "displayRule": "SHOW_ALL",
+  "appliedOn": 7,
+  "mdrEnabled": true,
+  "mdrSettings": {
+    "mdrConditions": ["contactEmail"],
+    "target": [
+      "amount",
+      "ruleName",
+      "operation",
+      "multiplierField",
+      "multiplierValueField",
+      "isMultiplier"
+    ]
+  }
+}

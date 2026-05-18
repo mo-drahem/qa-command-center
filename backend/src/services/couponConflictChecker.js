@@ -169,5 +169,10 @@ async function checkCouponConflicts({ environment, newCoupon }) {
   };
 }
 
-module.exports = { checkCouponConflicts };
+module.exports = {
+  checkCouponConflicts,
+  analyzeConflicts,
+  couponIdentifiers,
+  findMatchedConditions,
+};
 

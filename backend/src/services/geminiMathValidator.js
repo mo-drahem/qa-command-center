@@ -233,8 +233,15 @@ function normalizeMathValidationShape(aiResult) {
 }
 
 async function validateLogsMathWithGemini(logs) {
+  const deterministicValidation = validateLogsMath(logs);
+
   if (!env.GEMINI_API_KEY) {
-    return { mathValidation: validateLogsMath(logs), provider: 'deterministic', reason: 'GEMINI_API_KEY not set' };
+    return {
+      mathValidation: deterministicValidation,
+      deterministicValidation,
+      provider: 'deterministic',
+      reason: 'GEMINI_API_KEY not set',
+    };
   }
   const geminiTimeoutMs = Number(env.GEMINI_TIMEOUT_MS || 90000);
 
@@ -305,16 +312,31 @@ async function validateLogsMathWithGemini(logs) {
 
   if (!response) {
     const details = lastErr?.response?.data?.error?.message || lastErr?.message || 'Gemini math validation failed';
-    return { mathValidation: validateLogsMath(logs), provider: 'deterministic', reason: details };
+    return {
+      mathValidation: deterministicValidation,
+      deterministicValidation,
+      provider: 'deterministic',
+      reason: details,
+    };
   }
 
   const text = response.data?.candidates?.[0]?.content?.parts?.map((p) => p?.text || '').join('\n').trim();
   const parsed = normalizeMathValidationShape(parseJsonFromText(text || ''));
   if (!parsed) {
-    return { mathValidation: validateLogsMath(logs), provider: 'deterministic', reason: 'Gemini returned invalid JSON for math validation' };
+    return {
+      mathValidation: deterministicValidation,
+      deterministicValidation,
+      provider: 'deterministic',
+      reason: 'Gemini returned invalid JSON for math validation',
+    };
   }
 
-  return { mathValidation: parsed, provider: 'gemini' };
+  return {
+    mathValidation: parsed,
+    deterministicValidation,
+    provider: 'gemini',
+    reason: null,
+  };
 }
 
 module.exports = { validateLogsMathWithGemini };
