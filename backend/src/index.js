@@ -1,14 +1,20 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { env } = require('./config/env');
 const loggerRoutes = require('./routes/loggerRoutes');
+const { requestContext } = require('./middleware/requestContext');
+const { errorHandler } = require('./middleware/errorHandler');
+const { apiKeyAuth } = require('./middleware/apiKeyAuth');
+const { auditLog } = require('./middleware/auditLog');
 
 const app = express();
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json());
+app.use(requestContext);
+app.use(auditLog);
+app.use('/api', apiKeyAuth);
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/logger', loggerRoutes);
@@ -17,14 +23,7 @@ app.use('/api/logger', loggerRoutes);
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 // ─── Centralized error middleware ─────────────────────────────────────────────
-// eslint-disable-next-line no-unused-vars
-app.use((err, _req, res, _next) => {
-  console.error('[ERROR]', err.message);
-  const status = err.status || err.statusCode || 500;
-  res.status(status).json({
-    error: err.message || 'Internal server error',
-  });
-});
+app.use(errorHandler);
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 const PORT = Number(env.PORT) || 4000;

@@ -1,0 +1,293 @@
+{
+  "type": "hotel",
+  "product": {
+    "pricingRules": {
+      "id": "prod-b5a3adc5-545b-4bb2-a9ff-329766031ba6",
+      "name": "جولدن كراون",
+      "total": 1189.23,
+      "vendor": "Expedia",
+      "type": "hotel",
+      "category": "hotel",
+      "checkin": "2025-09-10",
+      "checkout": "2025-09-13",
+      "numberOfNights": 3,
+      "numberOfGuests": 2,
+      "cartKeyFirstDepartureTime": "2025-09-10",
+      "cartKeyLastArrivalTime": "2025-09-13",
+      "cityEn": "Prague",
+      "hotelNameEn": "Golden Crown",
+      "countryCode": "CZ",
+      "ahsGroupName": "almosafer web",
+      "hotelId": 1333001,
+      "roomName": "Economy Room - 1 Queen Bed",
+      "roomBasis": "RO",
+      "roomHashCode": "25e32a96-1145-5377-845f-3a1da2757b91",
+      "roomClass": "Economy",
+      "roomType": "Room",
+      "numberOfRoom": 1,
+      "supplierName": "Expedia",
+      "supplierId": 100002,
+      "contractId": 10155,
+      "daysBeforeCheckin": 5,
+      "entityType": "",
+      "entityId": "",
+      "b2bAccountId": "",
+      "searchTerm": "",
+      "Info": {
+        "Price": {
+          "Total": 1189.23,
+          "Base": 1189.23,
+          "Tax": 0,
+          "Currency": "SAR"
+        }
+      }
+    },
+    "outputVat": 150,
+    "inputVat": 50,
+    "options": {
+      "canDisplay": true,
+      "hotelId": 1333001,
+      "atgHotelId": 1333001,
+      "hotelNameEn": "Golden Crown",
+      "hotelNameAr": "جولدن كراون",
+      "addressEn": "Vladislavova 26",
+      "addressAr": "Vladislavova 26",
+      "area": "Nove Mesto",
+      "address": "Vladislavova 26",
+      "district": "",
+      "chainCode": 257,
+      "geoLocation": {
+        "Latitude": 50.08162,
+        "Longitude": 14.42121
+      },
+      "starRating": 4,
+      "room": [
+        {
+          "kidsAges": [],
+          "numberOfAdults": 2,
+          "rmsDetail": {
+            "type": "Room",
+            "bedding": "1 Queen Bed",
+            "view": "",
+            "room": "",
+            "attribute1": "",
+            "attribute2": "",
+            "custom": "",
+            "hashCode": "25e32a96-1145-5377-845f-3a1da2757b91",
+            "roomCode": "---:ECM:ROM:---:QUN:---:---:---",
+            "original": "Economy Room, 1 Queen Bed",
+            "locale": {
+              "ar": {
+                "type": "غرفة",
+                "bedding": "١ سرير كوين",
+                "view": "",
+                "room": "",
+                "attribute1": "",
+                "attribute2": "",
+                "custom": "",
+                "class": "اقتصادية"
+              }
+            },
+            "class": "Economy"
+          },
+          "roomBasis": "Room only RO",
+          "roomId": "e8772113-145a-4499-a6fd-952ba0fbf91f",
+          "originalRoomName": "Economy Room, 1 Queen Bed",
+          "roomName": "غرفة اقتصادية - ١ سرير كوين",
+          "roomNameEn": "Economy Room - 1 Queen Bed",
+          "roomNameAr": "غرفة اقتصادية - ١ سرير كوين",
+          "templateInfo": {
+            "templateId": 776224,
+            "matchingMethod": "AUTO",
+            "matchingLevel": "L1",
+            "debug": {
+              "roomHashCode": "25e32a96-1145-5377-845f-3a1da2757b91",
+              "id": 776224,
+              "atgHotelId": 1333001
+            }
+          },
+          "dynamicAssigning": false,
+          "content": {
+            "description": true,
+            "size": true,
+            "facilityCategories": true,
+            "imageCategories": true
+          },
+          "adultsCount": 2,
+          "id": "e8772113-145a-4499-a6fd-952ba0fbf91f",
+          "roomClass": {
+            "en": "Economy",
+            "ar": "اقتصادية"
+          },
+          "roomBedding": {
+            "en": "1 Queen Bed",
+            "ar": "١ سرير كوين"
+          },
+          "roomView": {
+            "en": "",
+            "ar": ""
+          },
+          "roomRateInfo": {
+            "total": 1189.23,
+            "finalTax": 113.94,
+            "originalTax": 29.78,
+            "originalTotal": 1189.23,
+            "finalPriceInSupplierCurrency": 310.82,
+            "originalPriceInSupplierCurrency": 310.82,
+            "dynamicMarkupFee": 0,
+            "supplierCurrency": "USD",
+            "firstTotal": 0,
+            "roomNightlyRates": [
+              {
+                "rate": 396.41
+              },
+              {
+                "rate": 396.41
+              },
+              {
+                "rate": 396.41
+              }
+            ]
+          },
+          "roomTitle": {
+            "en": "Economy Room - 1 Queen Bed",
+            "ar": "غرفة اقتصادية - ١ سرير كوين"
+          },
+          "KidsAges": [],
+          "AdultsCount": 2,
+          "Id": "e8772113-145a-4499-a6fd-952ba0fbf91f",
+          "RoomBasis": "Room only RO",
+          "Price": {
+            "Currency": "SAR",
+            "DynamicMarkupFee": 0,
+            "FinalPrice": 1189.23,
+            "FinalPriceInSupplierCurrency": 310.82,
+            "OriginalPrice": 1189.23,
+            "OriginalPriceInSupplierCurrency": 310.82,
+            "SupplierCurrency": "USD"
+          }
+        }
+      ],
+      "checkIn": "2025-09-10",
+      "checkInDate": "2025-09-10 00:00:00",
+      "checkOut": "2025-09-13",
+      "checkOutDate": "2025-09-13 00:00:00",
+      "countryCode": "CZ",
+      "city": "براغ",
+      "cityEn": "Prague",
+      "cityAr": "براغ",
+      "propertyTypeEn": "Hotel",
+      "propertyTypeAr": "فندق",
+      "packageId": "788c7be0-7d19-45ac-9610-755f125fceb3",
+      "connectivitySupplierType": "Direct",
+      "sessionId": "9c80fa94-347d-468e-8cc3-a483ada1adff",
+      "isFullyMarkedPaid": false,
+      "numberOfNights": 3,
+      "numberOfGuests": 2,
+      "isAgentSearch": false,
+      "agentEmail": "",
+      "firstCancellationDate": "2025-09-03 00:00:00",
+      "supplierFirstCancellationDate": "2025-09-05 00:00:00",
+      "tourismFee": {
+        "tourismFee": 0,
+        "totalTourismFee": 0,
+        "feeCurrency": null,
+        "taxPerType": null
+      },
+      "bookingRemark": {
+        "en": "Choices between multiple bed types for the same room are requests only and may not be honored at the hotel if availability does not permit.",
+        "ar": ""
+      },
+      "ahsGroupName": "almosafer web",
+      "hotelInfo": {
+        "phoneNumber": "420-222 944 114"
+      },
+      "roomName": "Economy Room - 1 Queen Bed",
+      "roomBasis": "RO",
+      "roomHashCode": "25e32a96-1145-5377-845f-3a1da2757b91",
+      "roomClass": "Economy",
+      "roomType": "Room",
+      "numberOfRooms": 1,
+      "supplierName": "Expedia",
+      "supplierId": 100002,
+      "contractId": 10155,
+      "daysBeforeCheckin": 5,
+      "hotelHasTransfer": false,
+      "addOns": {
+        "transfer": false
+      },
+      "inputVat": 0,
+      "outputVat": 0,
+      "vatConfig": {
+        "product": false,
+        "markup": false,
+        "discount": false,
+        "method": "AUTO"
+      }
+    },
+    "name": "hotel-test",
+    "vendorName": "amd",
+    "code": "TestHotel",
+    "type": "hotel",
+    "category": "hotel",
+    "supplierName": "SV",
+    "addedBy": "hub-api",
+    "allowedPaymentMethods": [
+      {
+        "provider": "checkoutcom",
+        "label": "Credit Card",
+        "applemid": "com.almosafer.alrajhi"
+      },
+      {
+        "provider": "pap",
+        "label": "Pay at Property"
+      }
+    ],
+    "price": {
+      "base": 970,
+      "currency": "SAR",
+      "tax": 30,
+      "discount": 0,
+      "miscellaneous": 0,
+      "markup": 0
+    },
+    "vendorPrice": {
+      "base": 20000,
+      "currency": "SAR",
+      "tax": 50,
+      "discount": 0,
+      "miscellaneous": 0,
+      "markup": 0
+    },
+    "supplierPrice": {
+      "base": 30000,
+      "currency": "SAR",
+      "tax": 40,
+      "discount": 0,
+      "miscellaneous": 0,
+      "markup": 0
+    }
+  },
+  "contact": {
+    "title": "Ms",
+    "firstName": "QA",
+    "lastName": "User",
+    "phone": "+962795526408",
+    "email": "qa.user@example.com",
+    "customerId": null,
+    "countryId": null
+  },
+  "payment": {
+    "method": "checkoutcom",
+    "source": null,
+    "card": {
+      "expiryYear": "0",
+      "expiryMonth": "01",
+      "number": "5436031030661123",
+      "name": "d",
+      "cvv": ""
+    }
+  },
+  "isManual": true,
+  "isManualOrder": true
+}

@@ -1,6 +1,6 @@
 # QA Command Center
 
-QA Command Center is a web tool for QA teams to analyze OMS traces, generate AI narratives, validate math/totals, run fast-track business scenarios, and inspect JSON responses in a readable viewer.
+QA Command Center is a web tool for QA teams to analyze OMS traces, generate AI narratives, validate math/totals, run business scenarios against OMS APIs, and inspect JSON responses in a readable viewer.
 
 ## What It Does
 
@@ -8,8 +8,9 @@ QA Command Center is a web tool for QA teams to analyze OMS traces, generate AI 
 - Extract and display vital business data (app-id, email, totals, product context).
 - Run AI + deterministic math validation focused on pricing/totals structures.
 - Lookup OMS entities by order number, order id, cart id, or sale id.
-- Check coupon conflicts before creation (duplicate identifiers + condition overlap).
-- Execute guided fast-track scenarios (cart/sale steps) directly from UI.
+- Check coupon conflicts and simulate promotion risk.
+- **Business Scenarios** — discrete OMS actions (rules, cart, sale) with editable request drafts and one-click execute.
+- Fast-track multi-step flows (legacy scenario runner).
 - Render request/response payloads with a code/tree JSON viewer.
 
 ## Tech Stack
@@ -24,135 +25,123 @@ QA Command Center is a web tool for QA teams to analyze OMS traces, generate AI 
 ```text
 backend/
   src/
-    config/
-    routes/
+    config/            # OMS hosts, business actions, fast-track steps
+    controllers/
+    fixtures/          # Rule templates, new-cart shell (contact/payment)
+    lib/               # exampleFixtures, cart headers, runtime placeholders
+    routes/logger/
     services/
+  test/
   .env.example
 
 frontend/
   src/
-  vite.config.js
+    components/logger/
+    config/              # Vital fields per business action
+    domain/
 
-add-product-to-cart.json
-frontend/add-hotel-product-to-cart.json
+examples/              # Bruno / curl exports — loaded at runtime
+  new-cart-with-product-flight.json
+  new-cart-with-product-hotel.json
+  add-product-to-cart.json
+  add-hotel-product-to-cart.json
+  prepare-checkout.json
+  apply-coupon-to-cart.json
 ```
+
+### Fixtures policy
+
+| Location | Role |
+|----------|------|
+| `examples/*.json` | **Runtime** cart/sale bodies (via `backend/src/lib/exampleFixtures.js`) |
+| `backend/src/fixtures/*.json` | Rule templates (`createRule.json`), checkout/coupon stubs, `newCartShell.json` |
+| `backend/.env` | Secrets and QA identity overrides (`FAST_TRACK_DEFAULT_*`) |
+
+Do not commit real PII or production data. Dev/staging only.
 
 ## Prerequisites
 
 - Node.js 18+ (recommended)
 - npm
-- Network access to internal OMS services used by your environment
+- Network access to internal OMS services (dev/staging hostnames)
 
 ## Setup
-
-1) Install dependencies
 
 ```bash
 cd backend && npm install
 cd ../frontend && npm install
-```
-
-2) Configure backend environment
-
-```bash
 cp backend/.env.example backend/.env
 ```
 
-Required/important keys in `backend/.env`:
+Important `backend/.env` keys:
 
-- `PORT` (default `4000`)
-- `LOGGING_API_DEV_BASE_URL`
-- `LOGGING_API_STAGING_BASE_URL`
-- `LOGGING_API_DEFAULT_ENV` (`dev` or `staging`)
-- `GEMINI_MODEL` (use: `gemini-3.1-flash-lite-preview`)
-- `GEMINI_API_KEY`
-- `GEMINI_TIMEOUT_MS` (default: `90000`)
-
-Optional legacy keys:
-
-- `COPILOT_MODEL`
-- `COPILOT_API_KEY`
-
-Example:
-
-```env
-PORT=4000
-LOGGING_API_DEFAULT_ENV=dev
-GEMINI_MODEL=gemini-3.1-flash-lite-preview
-GEMINI_TIMEOUT_MS=90000
-GEMINI_API_KEY=your_key_here
-```
+- `LOGGING_API_DEV_BASE_URL`, `LOGGING_API_STAGING_BASE_URL`
+- `GEMINI_API_KEY`, `GEMINI_MODEL` (e.g. `gemini-3.1-flash-lite-preview`)
+- `FAST_TRACK_DEFAULT_APP_ID`, `FAST_TRACK_DEFAULT_ENTITY_ID`, `FAST_TRACK_DEFAULT_CLIENT_ID`
+- `FAST_TRACK_DEFAULT_USER_EMAIL`, `FAST_TRACK_DEFAULT_USER_ID`, `FAST_TRACK_DEFAULT_USER_PHONE`
+- Optional: `QA_CENTER_API_KEY`, `OMS_*_SERVICE_BASE` overrides
 
 ## Run Locally
 
-Backend:
-
 ```bash
-cd backend
-npm run dev
+cd backend && npm run dev    # http://localhost:4000
+cd frontend && npm run dev   # http://localhost:5173
 ```
-
-Frontend:
-
-```bash
-cd frontend
-npm run dev
-```
-
-Open `http://localhost:5173`.
-
-The frontend proxies `/api/*` to `http://localhost:4000` (configured in `frontend/vite.config.js`).
 
 ## Main API Endpoints
 
-All routes are under `/api/logger`:
+All routes under `/api/logger`:
 
-- `POST /narrative`
-- `POST /lookup`
-- `POST /coupon-conflicts`
-- `POST /promotion-risk`
-- `POST /business-scenario-step`
-- `GET /fast-track/scenarios`
-- `GET /fast-track/templates/add-flight-product-body`
-- `GET /fast-track/templates/add-hotel-product-body`
-- `GET /fast-track/templates/prepare-body`
-- `POST /fast-track/execute`
+| Endpoint | Purpose |
+|----------|---------|
+| `POST /narrative` | AI narrative from tracer |
+| `POST /lookup` | OMS entity lookup |
+| `POST /coupon-conflicts` | Coupon conflict check |
+| `POST /promotion-risk` | Promotion risk simulation |
+| `GET /business-actions` | Business Scenarios catalog |
+| `GET /business-actions/:actionId/draft` | Request template for an action |
+| `POST /business-actions/execute` | Execute action (proxy to OMS) |
+| `GET /examples` | List loaded `examples/*.json` files |
+| `GET /fast-track/scenarios` | Fast-track scenario list |
+| `POST /fast-track/execute` | Run a fast-track step |
 
-Health check:
+Health: `GET /health`
 
-- `GET /health`
+## Business Scenarios (UI tab)
+
+Actions are grouped as **Rules & MDR**, **Cart**, and **Sale**. Notable flows:
+
+- **Rules:** create/update rule, get MDR export (`GET …/mdr/export-csv/{rule-id}`) — rule-id is 24-char hex
+- **Cart:** `POST /cart/newCartWithProduct` (flight/hotel bodies from `examples/new-cart-with-product-*.json`)
+- **Cart (steps):** create empty cart, add product, apply coupon, prepare, checkout
+- **Sale:** create with product, prepare, checkout
+
+Runtime fields (`cart-id`, `sale-id`, `rule-id`) update the URL before execute. Headers and body are editable; vital fields stay in sync with JSON.
 
 ## Fast-Track Scenarios
 
-Fast-track scenarios let QA execute common multi-step flows quickly from UI without manually rebuilding requests in Postman.
+- **Scenario 1 / 2:** single step `newCartWithFlightProduct` / `newCartWithHotelProduct`
+- **Scenario 3 / 4:** sale + flight/hotel checkout flows
+- **Scenario 5 / 6:** cart + coupon / prepare
 
-Current scenarios:
+Definitions: `backend/src/config/fastTrackScenarios.js`
 
-- `Scenario 1 - Cart + Flight`
-  - `createEmptyCart`
-  - `addFlightProduct`
-- `Scenario 2 - Cart + Hotel`
-  - `createEmptyCartHotel`
-  - `addHotelProduct`
-- `Scenario 3 - Sale + Flight`
-  - `createSaleWithFlightProduct`
-  - `prepareSaleCheckout`
-  - `checkoutSale`
+## Tests & CI
 
-Current backend scenario definitions are exposed by:
+```bash
+cd backend && npm test
+cd frontend && npm run test && npm run lint && npm run build
+```
 
-- `GET /api/logger/fast-track/scenarios`
+GitHub Actions: `.github/workflows/ci.yml` runs frontend lint/test/build and backend tests.
 
-Step requests are executed via:
+## Architecture
 
-- `POST /api/logger/fast-track/execute`
-
-## Notes
-
-- Cart/sale IDs and totals are propagated across steps when detected in responses.
-- Fast-track request headers are standardized for QA runs (`app-id`, `x-currency`, `x-user-email`, `x-user-id`, `Content-Type`).
-- If Gemini is unavailable or rate-limited, the backend uses fallback behavior so reports still render.
-- If Gemini calls time out, increase `GEMINI_TIMEOUT_MS` and restart backend.
+- `backend/src/routes/logger/` — route wiring
+- `backend/src/controllers/` — HTTP orchestration
+- `backend/src/config/businessActionRegistry.js` — action drafts + OMS proxy execute
+- `frontend/src/api/` — HTTP client
+- `frontend/src/domain/` — JSON/vital-field helpers (unit tested)
 
 ## License
 

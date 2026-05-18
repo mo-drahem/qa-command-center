@@ -1,0 +1,8 @@
+{
+  "type": "flight",
+  "payment": {
+    "paymentMethod": "checkoutcom"
+  },
+  "total": 327.75,
+  "isPaid": true
+}

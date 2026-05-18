@@ -1,0 +1,867 @@
+{
+    "product":         {
+        "pricingRules": {
+            "hasQitaf": false,
+            "hasWallet": false,
+            "ahsGroupName": "",
+            "cartKeycartType": "flight",
+            "totalSeat": 1,
+            "validatingCarrier": "leg1",
+            "isDomestic": true,
+            "operatingCarrier": "SV",
+            "vendor": "SHAMS",
+            "supplier": "SV",
+            "category": "flight",
+            "type": "flight",
+            "totalPax": 3,
+            "experiment": "variant_a",
+            "isRoundTrip": false,
+            "isMultiCity": false,
+            "isOneWay": true,
+            "origin": "AA",
+            "destination": "RUH",
+            "originCountryCode": "EG",
+            "destinationCountryCode": "EG",
+            "isStopLegFirst": false,
+            "flightCode": [
+                "SV-1018"
+            ],
+            "flightPath": [
+                "AA-RUH"
+            ],
+            "isSotoBooking": false,
+            "leg_0_cabin": "economy",
+            "leg_0_fareBasis": "vngfsab 4",
+            "leg_0_cabinCode": "m",
+            "leg_0_classOfLeg": "v",
+            "cartKeyFirstDepartureTime": "2024-09-14T06:00:00",
+            "clientVersion": "",
+            "cartKeyLastArrivalTime": "2024-09-14T07:50:00",
+            "daysBeforeCheckin": 15,
+            "hoursBeforeDeparture": 353.96,
+            "base": 500,
+            "cartKeybase": 500,
+            "cartKeytax": 50,
+            "total": 550,
+            "totalWithoutVat": 550,
+            "totalPriceWithoutVat": 550,
+            "isVatApplied": true,
+            "cartKeytotalSeat": 1,
+            "fareFamily": "ECO BASIC",
+            "customRule": true,
+            "customRuleId": "DISABLED_ONLINE_CHECKIN_ID",
+            "isMultiPnr": true,
+            "direction": "inbound"
+        },
+        "outputVat": 100,
+        "inputVat": 100,
+        "options": {
+            "canDisplay": true,
+            "listingPrice": {
+                "totals": 500,
+                "currency": "SAR",
+                "oldTotals": 500,
+                "oldCurrency": "SAR"
+            },
+            "fare": {
+                "legDetails": [
+                    {
+                        "price": {
+                            "total": 500,
+                            "luggage": 0,
+                            "penalty": 0,
+                            "tax": 0,
+                            "currency": "SAR",
+                            "originCurrency": "SAR",
+                            "base": 500
+                        },
+                        "segment": [
+                            {
+                                "mealService": null,
+                                "freeBaggage": {
+                                    "checkIn": {
+                                        "code": 1,
+                                        "unit": "KG",
+                                        "qty": 1,
+                                        "allowance": 20,
+                                        "text": "20 KG",
+                                        "totalWeight": 20,
+                                        "quantity": 1
+                                    },
+                                    "cabin": {
+                                        "unit": "KG",
+                                        "qty": 1,
+                                        "allowance": 10,
+                                        "text": "10 KG"
+                                    },
+                                    "baggageOptionsAvailable": true,
+                                    "underSeat": {
+                                        "unit": "KG",
+                                        "quantity": 1,
+                                        "qty": 1,
+                                        "allowance": 10,
+                                        "text": "10 KG",
+                                        "dimensions": "40 x 20 x 30 cm"
+                                    }
+                                },
+                                "classOfLeg": null,
+                                "fareBasis": null,
+                                "cabinText": "Economy",
+                                "cabinCode": "Economy",
+                                "availability": 28,
+                                "flightCode": "F3-101"
+                            }
+                        ],
+                        "index": 1,
+                        "vendorRef": "RjN_IDEwMX4gfn5SVUh_MDkvMDQvMjAyNCAwNTowMH5KRUR_MDkvMDQvMjAyNCAwNjo0NX5_"
+                    }
+                ],
+                "vendor": "ONE",
+                "item": {
+                    "basis": [],
+                    "type": []
+                },
+                "routingId": null
+            },
+            "leg": [
+                {
+                    "originId": "RUH",
+                    "departure": "2026-04-06T12:30:00Z",
+                    "flightCode": "F3-101",
+                    "segmentId": [
+                        "9fb259bc"
+                    ],
+                    "destinationId": "AA",
+                    "arrival": "2024-09-04T06:45:00",
+                    "path": [
+                        "RUH",
+                        "AA"
+                    ],
+                    "stopCount": 0,
+                    "stopId": [],
+                    "validatingCarrier": "F3",
+                    "flags": [],
+                    "groupId": null,
+                    "direction": "outbound",
+                    "fareFamily": {
+                        "fareFamilyCode": "FLYP"
+                    },
+                    "fareKey": "MH5Tfn5GM35TREVBTH4xMDAzfn45fjF_TkpFRFJVSDAwOTAwMTB_WCEw|RkxZUCEy",
+                    "hasFareFamilies": true,
+                    "duration": {
+                        "text": "01h 45m",
+                        "value": 105
+                    },
+                    "id": "ab1fc3c2",
+                    "leg-connectingTime": [],
+                    "journeyKey": "RjN_IDEwMX4gfn5SVUh_MDkvMDQvMjAyNCAwNTowMH5KRUR_MDkvMDQvMjAyNCAwNjo0NX5_",
+                    "fareAvailabilityKey": "MH5Tfn5GM35TREVBTH4xMDAzfn45fjF_TkpFRFJVSDAwOTAwMTB_WCEw",
+                    "ssrReferences": [
+                        "SU5GVCEw",
+                        "WFAxNSEx",
+                        "WFAyMCEy",
+                        "WFAyNSEz",
+                        "WFAzMiE0"
+                    ],
+                    "originCountry": "SA",
+                    "destinationCountry": "EG",
+                    "originCity": "riyadh",
+                    "destinationCity": "jeddah",
+                    "departureUTC": "2024-09-04T02:00:00",
+                    "arrivalUTC": "2024-09-04T03:45:00",
+                    "arrivalDateTime": null,
+                    "departureDateTime": null
+                }
+            ],
+            "flightCodes": [
+                "F3-101"
+            ],
+            "path": [
+                "F3-101"
+            ],
+            "segment": [
+                {
+                    "departure": "2026-04-06T12:30:00Z",
+                    "departureAirport": {
+                        "code": "RUH",
+                        "terminal": "5"
+                    },
+                    "layover": [],
+                    "arrival": "2024-09-04T06:45:00",
+                    "arrivalAirport": {
+                        "code": "JED",
+                        "terminal": "1"
+                    },
+                    "marketingCarrierId": "F3",
+                    "operatingCarrierId": "F3",
+                    "carrierType": "",
+                    "flightCode": "F3-101",
+                    "connectingTime": null,
+                    "technicalStops": null,
+                    "flightDistance": {
+                        "text": null
+                    },
+                    "direction": "outbound",
+                    "cabinText": "Economy",
+                    "cabinCode": "Economy",
+                    "legID": "2d057fea",
+                    "journeyKey": "RjN_IDEwMX4gfn5SVUh_MDkvMDQvMjAyNCAwNTowMH5KRUR_MDkvMDQvMjAyNCAwNjo0NX5_",
+                    "fareAvailabilityKey": "MH5Tfn5GM35TREVBTH4xMDAzfn45fjF_TkpFRFJVSDAwOTAwMTB_WCEw",
+                    "ssrReferences": [
+                        "SU5GVCEw",
+                        "WFAxNSEx",
+                        "WFAyMCEy",
+                        "WFAyNSEz",
+                        "WFAzMiE0"
+                    ],
+                    "availability": 28,
+                    "duration": {
+                        "text": "01h 45m",
+                        "value": 105
+                    },
+                    "fareFamilyCode": "FLYP",
+                    "fareFamily": "fly+",
+                    "fareKey": "MH5Tfn5GM35TREVBTH4xMDAzfn45fjF_TkpFRFJVSDAwOTAwMTB_WCEw|RkxZUCEy",
+                    "id": "9fb259bc",
+                    "hasFareFamilies": true,
+                    "departureUTC": "2024-09-04T02:00:00",
+                    "arrivalUTC": "2024-09-04T03:45:00",
+                    "departureDateTime": null,
+                    "arrivalDateTime": null
+                }
+            ],
+            "legId": [
+                "ab1fc3c2"
+            ],
+            "validatingCarrier": "F3",
+            "perLegLuggage": true,
+            "inputVat": 0,
+            "outputVat": 88.43478260869566,
+            "luggage": [
+                {
+                    "route": "JEDDXB",
+                    "options": [
+                        {
+                            "amount": 70,
+                            "code": 1,
+                            "quantity": 1,
+                            "maxQuantity": 1,
+                            "supplierAmount": 70,
+                            "weight": 15,
+                            "currency": "SAR",
+                            "maxWeight": 15,
+                            "supplierCurrency": "SAR"
+                        },
+                        {
+                            "amount": 90,
+                            "code": 2,
+                            "quantity": 1,
+                            "maxQuantity": 1,
+                            "supplierAmount": 90,
+                            "weight": 20,
+                            "currency": "SAR",
+                            "maxWeight": 20,
+                            "supplierCurrency": "SAR"
+                        },
+                        {
+                            "amount": 115,
+                            "code": 3,
+                            "quantity": 1,
+                            "maxQuantity": 1,
+                            "supplierAmount": 115,
+                            "weight": 25,
+                            "currency": "SAR",
+                            "maxWeight": 25,
+                            "supplierCurrency": "SAR"
+                        },
+                        {
+                            "amount": 150,
+                            "code": 4,
+                            "quantity": 1,
+                            "maxQuantity": 1,
+                            "supplierAmount": 150,
+                            "weight": 32,
+                            "currency": "SAR",
+                            "maxWeight": 32,
+                            "supplierCurrency": "SAR"
+                        }
+                    ],
+                    "label": "RUH-DXB",
+                    "id": "ab1fc3c2"
+                }
+            ],
+            "pax": [
+                {
+                    "totals": {
+                        "total": 268.69565217391306,
+                        "luggage": 0,
+                        "penalty": 0,
+                        "couponDiscount": 0,
+                        "vat": 0,
+                        "mu": 0,
+                        "tax": 72.81,
+                        "currency": "SAR",
+                        "base": 195.88565217391303,
+                        "refundable": null
+                    },
+                    "info": {
+                        "ref": 1,
+                        "type": "ADT"
+                    },
+                    "ptc": {
+                        "apisRequired": true,
+                        "idRequired": true,
+                        "dobRequired": true,
+                        "passportRequired": true,
+                        "nationalIdRequired": true,
+                        "documentType": [
+                            {
+                                "type": "passport",
+                                "enabled": true,
+                                "issuingCountry": {
+                                    "include": [
+                                        "*"
+                                    ]
+                                },
+                                "nationality": {
+                                    "include": [
+                                        "*"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "nationalId",
+                                "enabled": true,
+                                "issuingCountry": {
+                                    "include": [
+                                        "SA",
+                                        "AE",
+                                        "QA",
+                                        "OM",
+                                        "KW",
+                                        "BH"
+                                    ]
+                                },
+                                "nationality": {
+                                    "include": [
+                                        "SA",
+                                        "AE",
+                                        "QA",
+                                        "OM",
+                                        "KW",
+                                        "BH"
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "iqamaId",
+                                "enabled": true,
+                                "issuingCountry": {
+                                    "include": [
+                                        "SA"
+                                    ]
+                                },
+                                "nationality": {
+                                    "exclude": [
+                                        "SA",
+                                        "AE",
+                                        "QA",
+                                        "OM",
+                                        "KW",
+                                        "BH"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ],
+            "itineraryId": "ab1fc3c2F3-855256c1_F3_ONE",
+            "nid": "1725008001308501161",
+            "ahsGroupName": "",
+            "hasFrequentFlyerOptions": false,
+            "hasMealOptions": false,
+            "hasSpecialRequestOption": false,
+            "fareFamilyOptions": {
+                "itineraries": [
+                    {
+                        "id": "a0949601F3-855256c1_F3_ONE",
+                        "price": 518,
+                        "currency": "SAR",
+                        "fareFamily": [
+                            "fly"
+                        ]
+                    }
+                ]
+            },
+            "vatConfig": {
+                "product": true,
+                "markup": true,
+                "discount": true,
+                "method": "AUTO"
+            },
+            "hasFareFamilies": true,
+            "fareRules": {
+                "statusCode": 200,
+                "data": [
+                    {
+                        "origin": "JED",
+                        "destination": "DXB",
+                        "pricingTime": "2024-08-30T08:57:26.841Z",
+                        "departureTime": "2026-04-06T12:30:00Z",
+                        "unit": "minute",
+                        "change": {
+                            "status": "ALLOWED",
+                            "condition": [
+                                {
+                                    "amount": 200,
+                                    "traveller": [
+                                        "ADT",
+                                        "CHD"
+                                    ],
+                                    "oldAmount": 200,
+                                    "oldCurrency": "SAR"
+                                }
+                            ],
+                            "timeframe": 2880
+                        },
+                        "cancellation": {
+                            "status": "NOT_ALLOWED",
+                            "condition": []
+                        },
+                        "createdAt": "2024-08-30T09:00:59.934Z",
+                        "nid": "1725008001308501161",
+                        "currency": "SAR",
+                        "refundMethod": "credit shell",
+                        "tags": {
+                            "change": "REISSUE_WITH_FEES",
+                            "wallet_change": "YES",
+                            "cancellation": "NO_REFUND_CREDIT",
+                            "wallet_cancellation": "NO"
+                        }
+                    }
+                ]
+            },
+            "checkInDate": null,
+            "checkOutDate": null,
+            "firstCancellationDate": null,
+            "supplierFirstCancellationDate": null,
+            "isMultiPnr": true,
+            "direction": "outbound"
+        },
+        "supplierName": "F6",
+        "code": "387197b828b6c1ecc7d3a916f",
+        "addedBy": "flight-api",
+        "vendorName": "one",
+        "name": "ab1fc3c2-F3-101",
+        "additionalData": {
+            "officeId": "Flight One",
+            "ticketingOfficeId": "Flight One",
+            "validatingCarrier": "sw",
+            "isDomestic": true,
+            "ticketingType": "",
+            "tzOfDepartureAirport": "Europe/London",
+            "searchType": "Oneway",
+            "experiment": "variant_a",
+            "cid": "855256c1",
+            "isTstCreated": false,
+            "itineraryId": "ab1fc3c2F3-855256c1_F3_ONE",
+            "isV3Search": true,
+            "isV3Pricing": true,
+            "paxTypeCount": {
+                "adult": 1,
+                "totalSeats": 2,
+                "child": 1,
+                "infant": 1
+            },
+            "query": "JED-DXB/2024-09-04/Economy/1Adult/1Child/1Infant",
+            "isV2Search": false,
+            "orderTracking": {
+                "pricingTime": "2024-08-30T08:57:26+0000",
+                "checkBookingTime": null,
+                "pnrTime": null,
+                "tstTime": null,
+                "startBookingTime": null
+            },
+            "fareUuid": "e12cce01-66ad-11ef-9e56-39e107c8a38e",
+            "availableAddOns": [
+                {
+                    "code": "insurance",
+                    "amount": 69
+                },
+                {
+                    "code": "onlineCheckIn",
+                    "amount": 10.35
+                },
+                {
+                    "code": "meetAndGreet",
+                    "amount": 379.5
+                },
+                {
+                    "code": "meetAndGreet",
+                    "amount": 76.38
+                },
+                {
+                    "code": "CFAR",
+                    "amount": 54.63
+                },
+                {
+                    "code": "smartDelay",
+                    "amount": 30.02
+                },
+                {
+                    "code": "esim",
+                    "amount": 11.5
+                }
+            ],
+            "transactionIdentifier": "",
+            "isPromoCodeApplied": false,
+            "hasMixedFareFamily": false,
+            "ab-recapturingaddon": "true",
+            "ab-decouplingaddons": "true",
+            "supplierVat": 0,
+            "includedVatPercentage": 88.43478260869566,
+            "originalVendorPrice": {
+                "base": 524.55,
+                "tax": 153.45,
+                "vat": 0,
+                "total": 678,
+                "currency": "SAR"
+            },
+            "analyticsData": {
+                "fareFamilies": {
+                    "successfullyFetched": true,
+                    "selectedFareFamily": {
+                        "price": 678
+                    },
+                    "cheapestFareFamily": {
+                        "price": 518,
+                        "priceDifference": 160
+                    },
+                    "mostExpensiveFareFamily": {
+                        "price": 818,
+                        "priceDifference": 140
+                    }
+                }
+            },
+            "hasFreeInsurance": false,
+            "isV3SSR": true,
+            "ssr": [
+                {
+                    "seatIndex": 1
+                },
+                {
+                    "seatIndex": 2
+                }
+            ],
+            "miscellaneousDescription": {
+                "type": "Luggage Surcharge",
+                "value": 0
+            },
+            "isV3SellSeat": true,
+            "isSeatReserved": true,
+            "seatReservedTime": "2024-08-30T08:59:09+0000",
+            "uiControls": {
+                "disableContactForm": false,
+                "disableTravellersForm": true,
+                "disableSSRForm": true
+            },
+            "supplierPrice": {
+                "currency": "SAR",
+                "base": 678,
+                "tax": 0,
+                "total": 678
+            },
+            "_priceCompareResult": {
+                "supplierPricePricing": {
+                    "base": 524.55,
+                    "currencyRate": 0,
+                    "commission": 0,
+                    "commissionCurrencyRate": 0,
+                    "tax": 153.45,
+                    "taxCurrencyRate": 0,
+                    "discount": 0,
+                    "discountCurrencyRate": 0,
+                    "total": 678,
+                    "totalCurrencyRate": 1,
+                    "miscellaneous": 0,
+                    "markup": 0,
+                    "inputVat": 0,
+                    "outputVat": 88.4348,
+                    "inputVatMeta": 0,
+                    "outputVatMeta": 88.4348,
+                    "totalWithVat": 766.4348,
+                    "currency": "SAR",
+                    "commissionCurrency": "",
+                    "taxCurrency": "",
+                    "discountCurrency": "SAR",
+                    "totalCurrency": "SAR"
+                },
+                "supplierPriceSellSeat": {
+                    "currency": "SAR",
+                    "base": 678,
+                    "tax": 0,
+                    "total": 678
+                },
+                "isCurrencyMatching": true,
+                "hasMiscellaneousPrice": false,
+                "isTotalMatching": true,
+                "isBaseMatching": false,
+                "isTaxMatching": false,
+                "isPricesMatching": true,
+                "reason": "Price match with incorrect breakdown"
+            },
+            "showAgeRestrictionFormDisclaimer": {
+                "F3": false
+            },
+            "isManuallyApproved": true,
+            "packageInfo": {
+                "createdAt": null,
+                "updatedAt": null,
+                "checkinDate": null,
+                "checkoutDate": null,
+                "validFrom": null,
+                "validTo": null
+            }
+        },
+        "traveller": [
+            {
+                "id": "trav-a089956b-63e6-4dc2-95cb-e00b95900884",
+                "createdAt": "2024-08-30T09:09:02+0000",
+                "updatedAt": "2024-08-30T09:09:02+0000",
+                "_id": "66d18aaf01c1407389957b65",
+                "title": "Mr",
+                "firstName": "Test",
+                "middleName": "",
+                "lastName": "User",
+                "type": "ADT",
+                "birthDate": "1974-10-07",
+                "nationality": "AE",
+                "originalTicketNo": "",
+                "ticketType": "",
+                "ticketSubType": "",
+                "eTicket": "",
+                "additionalData": {
+                    "index": 1,
+                    "type": "ADT",
+                    "seatIndex": 1,
+                    "isPrimaryContact": true
+                },
+                "travellerId": {
+                    "id": "tvid-fe4208a2-c396-4208-bc4f-000a211befbc",
+                    "createdAt": "2024-08-30T09:09:02+0000",
+                    "updatedAt": "2024-08-30T09:09:02+0000",
+                    "_id": "66d18c2e598c1d2d8a177ee5",
+                    "type": "passport",
+                    "number": "ee323232",
+                    "issueDate": "",
+                    "expiryDate": "2031-08-09",
+                    "issueCountry": "SA"
+                }
+            }
+        ],
+        "orderId": "66d18a4bdc4cdf7d2b3e3dc2",
+        "vendorConfirmationNumber": "VendorONE",
+        "supplierConfirmationNumber": "D5TQ4Z",
+        "statusText": "Auto Confirmed",
+        "paymentStatusText": "Authorised",
+        "ahsGroupName": "Almosafer Web",
+        "category": "flight",
+        "displayItemName": "Flight",
+        "vendorStatus": "Pending",
+        "supplierStatus": "Auto Confirmed",
+        "qty": 1,
+        "valid": true,
+        "type": "flight",
+        "isManual": false,
+        "emails": {
+            "ticket": true
+        },
+        "allowedPaymentMethods": [
+            {
+                "provider": "checkoutcom",
+                "label": "Credit Card",
+                "applemid": "merchant.com.almosafer.travel-dev"
+            },
+            {
+                "provider": "qitaf",
+                "label": "Qitaf"
+            },
+            {
+                "provider": "mokafa",
+                "label": "Mokafa"
+            },
+            {
+                "provider": "shukran",
+                "label": "Shukran"
+            },
+            {
+                "provider": "tabby",
+                "label": "Tabby"
+            },
+            {
+                "provider": "tamara",
+                "label": "Tamara"
+            },
+            {
+                "provider": "stcpay",
+                "label": "STC Pay"
+            }
+        ],
+        "price": {
+            "base": 450,
+            "currencyRate": 0,
+            "commission": 0,
+            "commissionCurrencyRate": 0,
+            "tax": 50,
+            "taxCurrencyRate": 0,
+            "discount": 0,
+            "discountCurrencyRate": 0,
+            "currency": "SAR",
+            "commissionCurrency": "",
+            "taxCurrency": "",
+            "discountCurrency": "",
+            "breakdown": [
+                {
+                    "details": [
+                        {
+                            "key": "FARE",
+                            "amount": 50
+                        },
+                        {
+                            "key": "TAXES_FEES",
+                            "amount": 50
+                        }
+                    ],
+                    "id": "trav-1",
+                    "type": "ADT",
+                    "ref": 1,
+                    "total": 100,
+                    "tickets": [
+                        {
+                            "ticketNumber": "trav_1_tx1",
+                            "ticketSubType": "ORIGINAL",
+                            "total": 50,
+                            "totalWithVat": 57.5,
+                            "vat": 7.5
+                        },
+                        {
+                            "ticketNumber": "trav_1_tx2",
+                            "ticketSubType": "ORIGINAL",
+                            "total": 50,
+                            "totalWithVat": 57.5,
+                            "vat": 7.5
+                        }
+                    ]
+                },
+                {
+                    "details": [
+                        {
+                            "key": "FARE",
+                            "amount": 130
+                        },
+                        {
+                            "key": "TAXES_FEES",
+                            "amount": 20
+                        }
+                    ],
+                    "id": "trav-2",
+                    "type": "ADT",
+                    "ref": 1,
+                    "total": 150,
+                    "tickets": [
+                        {
+                            "ticketNumber": "trav_2_tx1",
+                            "ticketSubType": "ORIGINAL",
+                            "total": 150,
+                            "totalWithVat": 172.5,
+                            "vat": 22.5
+                        }
+                    ]
+                },
+                {
+                    "details": [
+                        {
+                            "key": "FARE",
+                            "amount": 25
+                        },
+                        {
+                            "key": "TAXES_FEES",
+                            "amount": 25
+                        }
+                    ],
+                    "id": "trav-3",
+                    "type": "ADT",
+                    "ref": 1,
+                    "total": 50,
+                    "tickets": [
+                        {
+                            "ticketNumber": "trav_3_tx1",
+                            "ticketSubType": "ORIGINAL",
+                            "total": 25,
+                            "totalWithVat": 28.75,
+                            "vat": 3.75
+                        },
+                        {
+                            "ticketNumber": "trav_3_tx2",
+                            "ticketSubType": "ORIGINAL",
+                            "total": 25,
+                            "totalWithVat": 28.75,
+                            "vat": 3.75
+                        }
+                    ]
+                }
+            ]
+        },
+        "vendorPrice": {
+            "base": 480,
+            "currencyRate": 0,
+            "commission": 0,
+            "commissionCurrencyRate": 0,
+            "tax": 20,
+            "taxCurrencyRate": 0,
+            "discount": 0,
+            "discountCurrencyRate": 0,
+            "total": 500,
+            "totalCurrencyRate": 1,
+            "miscellaneous": 0,
+            "markup": 0,
+            "inputVat": 0,
+            "outputVat": 88.4348,
+            "inputVatMeta": 0,
+            "outputVatMeta": 88.4348,
+            "totalWithVat": 766.4348,
+            "currency": "SAR",
+            "commissionCurrency": "",
+            "taxCurrency": "",
+            "discountCurrency": "",
+            "totalCurrency": "SAR",
+            "breakdown": []
+        },
+        "supplierPrice": {
+            "base": 500,
+            "currencyRate": 0,
+            "commission": 0,
+            "commissionCurrencyRate": 0,
+            "tax": 0,
+            "taxCurrencyRate": 0,
+            "discount": 0,
+            "discountCurrencyRate": 0,
+            "total": 500,
+            "totalCurrencyRate": 1,
+            "miscellaneous": 0,
+            "markup": 0,
+            "inputVat": 0,
+            "outputVat": 0,
+            "inputVatMeta": 0,
+            "outputVatMeta": 0,
+            "totalWithVat": 500,
+            "currency": "SAR",
+            "commissionCurrency": "",
+            "taxCurrency": "",
+            "discountCurrency": "SAR",
+            "totalCurrency": "SAR",
+            "breakdown": []
+        }
+    }
+}
