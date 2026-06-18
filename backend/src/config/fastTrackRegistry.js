@@ -19,7 +19,13 @@ function assertAllowedFastTrackUrl(url, environment) {
   if (!/^https?:$/.test(parsed.protocol)) {
     throw badRequest('Only http/https protocols are allowed in override URL.');
   }
-  const expectedSuffix = environment === 'staging' ? '.tajawal-staging.internal' : '.tajawal-dev.internal';
+  const envKey = String(environment || 'dev').toLowerCase();
+  const expectedSuffix =
+    envKey === 'staging'
+      ? '.tajawal-staging.internal'
+      : envKey === 'production' || envKey === 'prod'
+        ? '.tajawal-prod-apps.internal'
+        : '.tajawal-dev.internal';
   if (!parsed.hostname.endsWith(expectedSuffix)) {
     throw badRequest(`override.url host must end with ${expectedSuffix}.`);
   }

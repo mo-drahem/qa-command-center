@@ -274,6 +274,7 @@ export default function BusinessScenariosPanel({ environment, onEnvironmentChang
             >
               <option value="dev">dev</option>
               <option value="staging">staging</option>
+              <option value="production">production</option>
             </select>
           </div>
           <div className="flex flex-col gap-1 flex-1 min-w-[240px]">

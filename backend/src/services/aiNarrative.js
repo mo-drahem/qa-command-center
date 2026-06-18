@@ -1,6 +1,19 @@
 const axios = require('axios');
 const { env } = require('../config/env');
 
+const NARRATIVE_RESPONSE_TIMEOUT_MS = 60_000;
+const FOCUS_PROMPT_MAX_CHARS = 2000;
+const CRITICAL_SERVICE_PATTERN = /PRICING-CALCULATOR|CART-SERVICE|CHECKOUT|ORDER-SERVICE|SALE-CORE|SALE-GATEWAY/i;
+const CRITICAL_BODY_MAX_CHARS = 15_000;
+const LIGHT_BODY_MAX_CHARS = 3_000;
+const SENSITIVE_KEY_PATTERN = /^(cvv|cvc|password|secret|token|encryptednumber|number)$/i;
+const SLIM_PAYLOAD_KEYS = new Set([
+  'totals', 'grandtotals', 'grandtotal', 'displaytotals', 'subtotal', 'total', 'totalamount',
+  'products', 'lineitems', 'items', 'cartitems', 'orderlines', 'rules', 'rulecodes', 'pricing',
+  'cart', 'order', 'orders', 'payment', 'coupon', 'couponcode', 'couponlockid', 'vat', 'body',
+  'data', 'result', 'pricingdata', 'success', 'value', 'amount', 'rate', 'type', 'promotiontype',
+]);
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -330,29 +343,202 @@ function buildHeuristicInsights(logs) {
   };
 }
 
-function buildStoryFromInsights(insights, title = 'QA Narrative') {
-  const asBulletArray = (value) => {
-    if (Array.isArray(value)) return value.map((x) => String(x || '').trim()).filter(Boolean);
-    if (typeof value === 'string' && value.trim()) {
-      return value
-        .split('\n')
-        .map((line) => line.replace(/^[-*]\s*/, '').trim())
-        .filter(Boolean);
-    }
-    return [];
-  };
+function asBulletArray(value) {
+  if (Array.isArray(value)) return value.map((x) => String(x || '').trim()).filter(Boolean);
+  if (typeof value === 'string' && value.trim()) {
+    return value
+      .split('\n')
+      .map((line) => line.replace(/^[-*]\s*/, '').trim())
+      .filter(Boolean);
+  }
+  return [];
+}
 
-  const overview = asBulletArray(insights.overviewPoints).map((p) => `- ${p}`).join('\n') || '- None';
-  const requests = asBulletArray(insights.requestList).map((r) => `- ${r}`).join('\n') || '- None';
-  const vitalData = asBulletArray(insights.vitalData).map((v) => `- ${v}`).join('\n') || '- None';
-  const pricingDetails = asBulletArray(insights.pricingRuleCouponDetails).map((v) => `- ${v}`).join('\n') || '- None';
+function flattenPricingAudit(audit) {
+  if (!audit || typeof audit !== 'object') return [];
+  const lines = [];
+  if (audit.callCount !== undefined) lines.push(`PRICING-CALCULATOR calls: ${audit.callCount}`);
+  asBulletArray(audit.callDifferences).forEach((d) => lines.push(`diff: ${d}`));
+  (Array.isArray(audit.rulesPerCall) ? audit.rulesPerCall : []).forEach((call) => {
+    const idx = call?.callIndex ?? '?';
+    asBulletArray(call?.rules).forEach((r) => lines.push(`call ${idx} rule: ${r}`));
+    asBulletArray(call?.calculationChain).forEach((c) => lines.push(`call ${idx} calc: ${c}`));
+  });
+  return lines;
+}
+
+function flattenVatValidation(vat) {
+  if (!vat) return [];
+  if (Array.isArray(vat)) return asBulletArray(vat);
+  if (typeof vat === 'object') {
+    return Object.entries(vat).map(([k, v]) => `${k}: ${String(v)}`);
+  }
+  return asBulletArray(vat);
+}
+
+function buildStorySection(title, items) {
+  const bullets = asBulletArray(items).map((item) => `- ${item}`).join('\n');
+  if (!bullets) return '';
+  return `### ${title}\n${bullets}\n\n`;
+}
+
+function buildStoryFromInsights(insights, title = 'QA Narrative') {
+  const sections = [
+    ['Conclusion', insights.conclusion ? [insights.conclusion] : []],
+    ['Narrative Story', insights.overviewPoints],
+    ['Requests List', insights.requestList],
+    ['Vital Data', insights.vitalData],
+    ['Pricing Rules & Coupons', insights.pricingRuleCouponDetails],
+    ['Pricing Calculator Audit', flattenPricingAudit(insights.pricingCalculatorAudit)],
+    ['VAT Validation', flattenVatValidation(insights.vatValidation)],
+    ['Totals Validation', insights.totalsValidation],
+    ['Product ID Consistency', insights.productIdConsistency],
+    ['Request Flow', insights.requestFlow],
+    ['Anomalies', insights.anomalies],
+    ['Recommendations', insights.recommendations],
+  ];
+
+  const body = sections.map(([heading, items]) => buildStorySection(heading, items)).join('');
+  return `## ${title}\n\n${body || '### Narrative Story\n- No insights generated\n\n'}`;
+}
+
+function maskSensitiveDeep(value) {
+  if (Array.isArray(value)) return value.map(maskSensitiveDeep);
+  if (!isPlainObject(value)) return value;
+  const out = {};
+  Object.entries(value).forEach(([key, raw]) => {
+    if (SENSITIVE_KEY_PATTERN.test(key) && typeof raw === 'string') {
+      out[key] = '***';
+    } else {
+      out[key] = maskSensitiveDeep(raw);
+    }
+  });
+  return out;
+}
+
+function slimPayloadForAi(value, depth = 0) {
+  if (value === null || value === undefined) return value;
+  if (Array.isArray(value)) {
+    return value.slice(0, 40).map((item) => slimPayloadForAi(item, depth + 1));
+  }
+  if (!isPlainObject(value)) return value;
+  if (depth > 4) return '[nested]';
+
+  const out = {};
+  Object.entries(value).forEach(([key, raw]) => {
+    const keyLower = key.toLowerCase();
+    const keep =
+      SLIM_PAYLOAD_KEYS.has(keyLower) ||
+      /total|amount|vat|price|rule|coupon|product|cart|order|payment|pricing/i.test(key);
+    if (keep) {
+      out[key] = slimPayloadForAi(raw, depth + 1);
+    }
+  });
+  return Object.keys(out).length ? out : { _note: 'payload trimmed — no pricing fields at this level' };
+}
+
+function compactPayload(value, maxChars) {
+  let parsed = parseJsonMaybe(value);
+  if (parsed === null || parsed === undefined) return null;
+
+  parsed = maskSensitiveDeep(parsed);
+  if (isPlainObject(parsed) && isPlainObject(parsed.body)) {
+    parsed = { body: parsed.body };
+  }
+
+  let text = JSON.stringify(parsed);
+  if (text.length <= maxChars) return parsed;
+
+  const slim = slimPayloadForAi(parsed);
+  text = JSON.stringify(slim);
+  if (text.length <= maxChars) return slim;
+
+  return { _truncatedPreview: `${text.slice(0, maxChars)}…` };
+}
+
+function isCriticalServiceLog(log) {
+  const label = `${log?.serviceName || ''} ${log?.requestURI || ''}`;
+  return CRITICAL_SERVICE_PATTERN.test(label);
+}
+
+function compactTraceForAi(logs) {
+  return (Array.isArray(logs) ? logs : []).map((log, index) => {
+    const critical = isCriticalServiceLog(log);
+    const maxChars = critical ? CRITICAL_BODY_MAX_CHARS : LIGHT_BODY_MAX_CHARS;
+    const entry = {
+      index,
+      serviceName: log?.serviceName || null,
+      requestURI: log?.requestURI || null,
+      timestamp: log?.timestamp || null,
+      durationMs: log?.durationMs ?? log?.duration ?? null,
+      statusCode: log?.statusCode ?? null,
+      method: log?.method || null,
+    };
+
+    const inputRequest =
+      log?.inputRequest ?? log?.request ?? log?.req ?? log?.requestBody ?? log?.payload ?? null;
+    const outputResponse =
+      log?.outputResponse ?? log?.response ?? log?.res ?? log?.responseBody ?? log?.data ?? log?.result ?? null;
+
+    const compactInput = compactPayload(inputRequest, maxChars);
+    const compactOutput = compactPayload(outputResponse, maxChars);
+    if (compactInput !== null) entry.inputRequest = compactInput;
+    if (compactOutput !== null) entry.outputResponse = compactOutput;
+    if (!compactInput && !compactOutput) entry._note = 'no JSON payload on this entry';
+
+    return entry;
+  });
+}
+
+function buildNarrativePrompt(traceEntries, focusPrompt, options = {}) {
+  const focus = String(focusPrompt || '').trim().slice(0, FOCUS_PROMPT_MAX_CHARS);
+  const focusBlock = focus
+    ? `USER FOCUS INSTRUCTIONS (highest priority — override general priorities when they conflict):\n${focus}\n\n`
+    : '';
+  const sourceNote =
+    options.logSource === 'grafana' || options.logSource === 'grafana-paste'
+      ? 'NOTE: TRACE_JSON was pasted or fetched from Grafana. Entries may be raw log lines or embedded OMS JSON.\n\n'
+      : '';
 
   return (
-    `## ${title}\n\n` +
-    `### Narrative Story\n${overview}\n\n` +
-    `### Requests List\n${requests}\n\n` +
-    `### Vital Data\n${vitalData}\n\n` +
-    `### Pricing Rules & Coupons\n${pricingDetails}`
+    'You are a QA analyst for OMS checkout API traces.\n' +
+    sourceNote +
+    'INPUT: a JSON array of log entries. Each entry may include inputRequest and outputResponse JSON payloads.\n' +
+    'Analyze ONLY fields present in the JSON. Do not assume product IDs, rule names, or call counts.\n' +
+    'Return ONLY valid JSON — no markdown fences, no explanation.\n' +
+    'All array values MUST be concise bullet-point strings, never paragraphs.\n' +
+    'For numeric checks show: expected | actual | delta | PASS/FAIL\n' +
+    'Do NOT output placeholders like "Not found". Omit missing fields instead.\n' +
+    'No item limits on arrays — list ALL rules, coupons, and validation checks you find.\n\n' +
+    'ANALYSIS PRIORITIES (in order):\n' +
+    '1. PRICING-CALCULATOR (/apply/on-cart): all rules (product/cart/total), computed values, success flags\n' +
+    '2. VAT: products of type "vat", subTotal, rate, line items, total VAT\n' +
+    '3. TOTALS: totals vs grandTotals vs displayTotals across cart, order, and payment\n' +
+    '4. FLOW: chronological call list with status and duration\n' +
+    '5. ANOMALIES: HTTP errors, missing fields, mismatches between calls\n' +
+    '6. CONCLUSION: one executive verdict (PASS / FAIL / INCONCLUSIVE) with the main reason\n\n' +
+    'OUTPUT SCHEMA:\n' +
+    '{\n' +
+    '  "conclusion": "PASS|FAIL|INCONCLUSIVE — 2-4 sentences summarizing the investigation",\n' +
+    '  "overviewPoints": ["..."],\n' +
+    '  "requestList": ["METHOD URI" or "METHOD URI -> STATUS"],\n' +
+    '  "vitalData": ["app-id=...", "email=...", "totalAmount=...", "productType=..."],\n' +
+    '  "pricingRuleCouponDetails": ["Call N (/apply/on-cart): couponCode=..., rules=..."],\n' +
+    '  "pricingCalculatorAudit": {\n' +
+    '    "callCount": 0,\n' +
+    '    "rulesPerCall": [{ "callIndex": 1, "rules": ["..."], "calculationChain": ["..."] }],\n' +
+    '    "callDifferences": ["..."]\n' +
+    '  },\n' +
+    '  "vatValidation": ["flightVat: expected | actual | PASS/FAIL", "..."],\n' +
+    '  "totalsValidation": ["PASS/FAIL: field | expected | actual | delta"],\n' +
+    '  "productIdConsistency": ["..."],\n' +
+    '  "requestFlow": ["T+0ms SERVICE METHOD URI -> STATUS (durationMs)"],\n' +
+    '  "anomalies": ["..."],\n' +
+    '  "recommendations": ["..."]\n' +
+    '}\n\n' +
+    focusBlock +
+    'TRACE_JSON:\n' +
+    JSON.stringify(traceEntries)
   );
 }
 
@@ -404,114 +590,10 @@ function normalizeTokenUsage(rawUsage = {}, provider) {
   };
 }
 
-async function callCopilotInsights(logs) {
+async function callCopilotInsights(logs, focusPrompt, options = {}) {
   const apiKey = env.COPILOT_API_KEY;
   const model = env.COPILOT_MODEL || 'gpt-4o';
-  const logLines = logs
-    .map((l, i) => {
-      const { reqHighlights, resHighlights } = extractDataHighlights(l);
-      return `${i + 1}. ${l.method || 'GET'} ${l.requestURI} status=${l.statusCode || 'N/A'} service=${l.serviceName || 'N/A'}; request=${reqHighlights.join(', ') || 'none'}; response=${resHighlights.join(', ') || 'none'}`;
-    })
-    .join('\n');
-
-    const prompt = `You are a QA engineer analyzing API trace logs from a travel booking system. Return ONLY valid JSON — no markdown, no explanation.
-
-CONTEXT — what you're looking at:
-- A flight checkout flow across these services: SALE-GATEWAY → SALE-CORE → CART-SERVICE → PRICING-CALCULATOR → CHECKOUT → ORDER-SERVICE
-- The PRICING-CALCULATOR is called at /apply/on-cart and returns rules applied per product
-- The cart contains one flight product (prod-f0f68ffe) with a pricing rule (TESTING_1034_ALM) applied on top
-- VAT is calculated as a separate product of type "vat" with its own price breakdown
-- Totals appear in three places: totals, displayTotals, and grandTotals — all must be consistent
-
-ANALYSIS PRIORITIES:
-
-1. PRICING CALCULATOR DEEP DIVE (most critical)
-   The PRICING-CALCULATOR is called 3 times. For each call:
-   - List every rule in outputResponse.body  where there's 3 types of rules (product rules - cart rule - total rules) with:
-     * rule name, code, type, promotionType
-     * action: operation, amount/percentage, based-on field
-     * computed value output
-     * success=true/false
-   - Show the full calculation chain for the flight product:
-     * flight base price (from request pricingData.products[].base and .total)
-     * rule applied: formula = (based field value) × percentage
-     * verify: does the computed value match rule.value in the response?
-   - Note any differences between the 3 PRICING-CALCULATOR calls (input or output changes)
-
-2. VAT CALCULATION VALIDATION
-   The VAT product's log shows: items[], rate, subTotal
-   Verify:
-   - subTotal = sum of all item prices in the VAT log
-   - VAT amount = subTotal × rate
-   - flight VAT = flight price total × 0.15
-   - rule VAT = rule price total × 0.15
-   - Total VAT = flight VAT + rule VAT
-   Show each step with expected vs actual values
-
-3. TOTALS CROSS-VALIDATION
-   Check ALL of these must be consistent:
-   - cart.totals.total = cart.grandTotals.total = displayItems.total.total
-   - grandTotals.subtotal must equal sum of main product prices (excluding VAT product)
-   - grandTotals.outputVat must equal VAT product price.total
-   - grandTotals breakdown[prod-f0f68ffe].subTotal — verify this includes rule amount or not
-   - order totals must match cart totals exactly
-   - payment.paymentTotal must match final grandTotal
-   - requestInput.total (checkout request) must match grandTotal
-   Flag every mismatch with: field | expected | actual | delta
-
-4. PRODUCT ID CONSISTENCY CHECK
-   The rule product gets a new ID on each CART-SERVICE call:
-   - CART-SERVICE call 1: prod-b9b5928d
-   - CART-SERVICE call 2: prod-519fc760
-   - ORDER-SERVICE: prod-d17c3e25
-   Verify this is expected behavior (new cart product created each pricing cycle) and confirm the final order uses the correct product IDs.
-
-5. REQUEST FLOW SUMMARY
-   List all service calls in order with timestamps and durations.
-
-RULES:
-- All array values must be concise bullet-point strings, never paragraphs
-- For numeric checks always show: expected | actual | delta (even if delta=0)
-- Remove the 6-item array limit — show ALL rules and ALL validation checks
-- If a calculation is correct, mark it PASS. If wrong, mark it FAIL with the delta.
-
-OUTPUT SCHEMA:
-{
-  "pricingCalculatorAudit": {
-    "callCount": 3,
-    "rulesPerCall": [
-      {
-        "callIndex": 1,
-        "timestamp": "...",
-        "inputProductTotal": 0,
-        "rules": ["rule: <name> | type: <promotionType> | condition: total > 0 | action: add 1% of Total | computed: <x> | success: true/false"],
-        "calculationChain": ["flight total 500 × 1% = 5.00 SAR | rule.value=5.0 | PASS/FAIL"]
-      }
-    ],
-    "callDifferences": ["call 1 vs 2: payment method present/absent in input"]
-  },
-  "vatValidation": {
-    "flightVat": "500 × 0.15 = 75 | actual: 75 | PASS",
-    "ruleVat": "5 × 0.15 = 0.75 | actual: 0.75 | PASS",
-    "totalVat": "75 + 0.75 = 75.75 | actual: 75.75 | PASS",
-    "vatSubTotal": "500 + 5 = 505 | actual: 505 | PASS"
-  },
-  "totalsValidation": [
-    "PASS/FAIL: <field> | expected: <x> | actual: <y> | delta: <z>"
-  ],
-  "productIdConsistency": [
-    "CART call 1 rule productId: prod-b9b5928d | CART call 2: prod-519fc760 | ORDER: prod-d17c3e25 — new ID each cycle, expected behavior: yes/no"
-  ],
-  "requestFlow": [
-    "T+0ms SALE-GATEWAY POST /sale/.../checkout -> 200 (841ms)",
-    "T+8ms SALE-CORE POST /sale/.../checkout -> 200 (833ms)"
-  ],
-  "vitalData": ["app-id=1034", "email=1234.fff@seera.sa", "totalAmount=580.75 SAR", "productType=flight", "saleId=sl-2c92364f", "orderId=order-5e5f826d", "paymentMethod=checkoutcom"]
-}
-
-TRACE LOGS:
-${logLines}`;
-
+  const prompt = buildNarrativePrompt(compactTraceForAi(logs), focusPrompt, options);
 
   const response = await axios.post(
     'https://api.githubcopilot.com/chat/completions',
@@ -527,7 +609,7 @@ ${logLines}`;
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      timeout: 30000,
+      timeout: NARRATIVE_RESPONSE_TIMEOUT_MS,
     }
   );
 
@@ -537,42 +619,19 @@ ${logLines}`;
   };
 }
 
-async function callGeminiInsights(logs) {
+async function callGeminiInsights(logs, focusPrompt, options = {}) {
   const apiKey = env.GEMINI_API_KEY;
-  const geminiTimeoutMs = Number(env.GEMINI_TIMEOUT_MS || 90000);
-  const rawModel = env.GEMINI_MODEL || 'gemini-3.1-flash-lite-preview';
+  const geminiTimeoutMs = Math.max(
+    NARRATIVE_RESPONSE_TIMEOUT_MS,
+    Number(env.GEMINI_TIMEOUT_MS || 90000)
+  );
+  const rawModel = env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
   const model = String(rawModel)
     .replace(/^models\//, '')
     .trim()
     .toLowerCase()
     .replace(/\s+/g, '-');
-  const logLines = logs
-    .map((l, i) => {
-      const { reqHighlights, resHighlights } = extractDataHighlights(l);
-      return `${i + 1}. ${l.method || 'GET'} ${l.requestURI} status=${l.statusCode || 'N/A'} service=${l.serviceName || 'N/A'}; request=${reqHighlights.join(', ') || 'none'}; response=${resHighlights.join(', ') || 'none'}`;
-    })
-    .join('\n');
-
-  const pricingContext = extractPricingRuleCouponDetails(logs).join('\n');
-
-  const prompt =
-    'You are a QA analyst for OMS checkout traces. Return JSON only.\n' +
-    'All array values MUST be concise bullet-point items, never paragraphs.\n' +
-    'Prioritize PRICING-CALCULATOR output response details and list ALL rules/coupons found.\n' +
-    'Schema:\n' +
-    '{\n' +
-    '  "overviewPoints": ["..."],\n' +
-    '  "requestList": ["METHOD URI" or "METHOD URI -> STATUS when status exists"],\n' +
-    '  "vitalData": ["app-id=...", "email=...", "totalAmount=...", "productType=..."],\n' +
-    '  "pricingRuleCouponDetails": [\n' +
-    '    "Call 1 (/apply/on-cart): couponCode=..., couponLockId=..., ruleCodes=..., rules=rule=<name>; promotionType=<type>; computed=<value>; success=<true|false>"\n' +
-    '  ]\n' +
-    '}\n' +
-    'No 6-item limit for pricingRuleCouponDetails. Include every discovered rule/coupon from PRICING-CALCULATOR calls.\n' +
-    'Do NOT output placeholders like "Not found". If missing, omit that vitalData item.\n' +
-    'MUST extract totalAmount and productType from checkout/order response when present.\n\n' +
-    'PRICING CONTEXT EXTRACTED FROM TRACE:\n' + pricingContext + '\n\n' +
-    'TRACE LOGS:\n' + logLines;
+  const prompt = buildNarrativePrompt(compactTraceForAi(logs), focusPrompt, options);
 
   const body = {
     contents: [
@@ -582,7 +641,8 @@ async function callGeminiInsights(logs) {
       },
     ],
     generationConfig: {
-      temperature: 0.2,
+      temperature: 0.1,
+      responseMimeType: 'application/json',
     },
   };
 
@@ -626,12 +686,14 @@ async function callGeminiInsights(logs) {
   };
 }
 
-async function generateNarrative(logs) {
+async function generateNarrative(logs, options = {}) {
+  const focusPrompt = String(options.focusPrompt || '').trim().slice(0, FOCUS_PROMPT_MAX_CHARS);
+  const narrativeOptions = { logSource: options.logSource || 'logging-api' };
   const heuristicInsights = buildHeuristicInsights(logs);
 
   if (env.GEMINI_API_KEY) {
     try {
-      const aiResult = await callGeminiInsights(logs);
+      const aiResult = await callGeminiInsights(logs, focusPrompt, narrativeOptions);
       if (aiResult?.insights) {
         aiResult.insights.vitalData = mergeAndFixVitalData(aiResult.insights.vitalData, logs);
         return {
@@ -665,7 +727,7 @@ async function generateNarrative(logs) {
 
   if (env.COPILOT_API_KEY) {
     try {
-      const aiResult = await callCopilotInsights(logs);
+      const aiResult = await callCopilotInsights(logs, focusPrompt, narrativeOptions);
       if (aiResult?.insights) {
         return {
           story: buildStoryFromInsights(aiResult.insights, 'Copilot QA Narrative'),
@@ -704,4 +766,9 @@ async function generateNarrative(logs) {
   };
 }
 
-module.exports = { generateNarrative };
+module.exports = {
+  generateNarrative,
+  compactTraceForAi,
+  buildNarrativePrompt,
+  buildStoryFromInsights,
+};

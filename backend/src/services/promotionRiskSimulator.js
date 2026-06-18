@@ -66,7 +66,7 @@ async function simulatePromotionRisk({ environment, newRule, activeRules }) {
   }
   const geminiTimeoutMs = Number(env.GEMINI_TIMEOUT_MS || 90000);
 
-  const rawModel = env.GEMINI_MODEL || 'gemini-3.1-flash-lite-preview';
+  const rawModel = env.GEMINI_MODEL || 'gemini-3.1-flash-lite';
   const model = String(rawModel)
     .replace(/^models\//, '')
     .trim()

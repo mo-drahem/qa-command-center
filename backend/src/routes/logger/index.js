@@ -9,10 +9,14 @@ const {
 
 const router = express.Router();
 
+router.get('/grafana-config', controller.getGrafanaConfig);
 router.post('/narrative', validateNarrativePayload, controller.postNarrative);
 router.post('/lookup', validateLookupPayload, controller.postLookup);
-router.post('/coupon-conflicts', controller.postCouponConflicts);
-router.post('/promotion-risk', controller.postPromotionRisk);
+router.post('/promotions/rules', controller.postPromotionRules);
+router.post('/promotions/rule', controller.postPromotionRuleById);
+router.post('/promotions/coupons', controller.postPromotionCoupons);
+router.post('/promotions/coupon', controller.postPromotionCouponById);
+router.post('/promotions/mdr', controller.postPromotionMdr);
 router.post('/business-scenario-step', controller.postBusinessScenarioStep);
 
 router.get('/examples', controller.getExampleCatalog);

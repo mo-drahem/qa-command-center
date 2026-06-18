@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { getOmsLookupConfig } = require('../config/oms');
 
 function normalizeArray(value) {
   if (Array.isArray(value)) return value;
@@ -155,8 +156,8 @@ function analyzeConflicts(newCoupon, existingCoupons) {
 }
 
 async function checkCouponConflicts({ environment, newCoupon }) {
-  const envKey = environment === 'staging' ? 'staging' : 'dev';
-  const url = `http://oms-v2-pricing-core-service.tajawal-${envKey}.internal/coupon`;
+  const cfg = getOmsLookupConfig(environment);
+  const url = `${cfg.pricingCoreServiceBase}/coupon`;
 
   const response = await axios.get(url, { timeout: 20000 });
   const coupons = pickCouponsFromResponse(response.data);

@@ -1,6 +1,8 @@
-/** Internal OMS host bases for dev/staging (QA tooling only). */
+/** Internal OMS host bases for dev/staging/production (QA tooling only). */
 export function getOmsHosts(environment) {
-  const suffix = environment === 'staging' ? 'staging' : 'dev';
+  const env = String(environment || 'dev').toLowerCase();
+  const suffix =
+    env === 'staging' ? 'staging' : env === 'production' || env === 'prod' ? 'prod-apps' : 'dev';
   return {
     cart: `http://oms-v3-cart-service.tajawal-${suffix}.internal`,
     sale: `http://oms-v3-sale-service.tajawal-${suffix}.internal`,

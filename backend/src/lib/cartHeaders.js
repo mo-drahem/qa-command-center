@@ -21,10 +21,20 @@ function cartProductHeaders(runtime = {}) {
   };
 }
 
+function saleLookupHeaders(runtime = {}) {
+  const defaults = fastTrackIdentityDefaults;
+  return {
+    accept: 'application/json',
+    'x-currency': String(runtime.currency || defaults.currency).trim(),
+    'x-skip-expiry-check': 'true',
+  };
+}
+
 const { hasRuntimeCartId } = require('./runtimePlaceholders');
 
 module.exports = {
   sharedCartHeaders,
   cartProductHeaders,
+  saleLookupHeaders,
   hasRuntimeCartId,
 };

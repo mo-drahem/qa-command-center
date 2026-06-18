@@ -431,6 +431,7 @@ export function CurlPreview({ tracerId, environment }) {
   const baseByEnv = {
     dev: 'http://oms-v3-logging-service.tajawal-dev.internal',
     staging: 'http://oms-v3-logging-service.tajawal-staging.internal',
+    production: 'http://oms-v3-logging-service.tajawal-prod-apps.internal',
   };
 
   const trimmedTracerId = tracerId.trim();

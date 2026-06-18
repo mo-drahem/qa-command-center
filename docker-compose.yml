@@ -1,0 +1,10 @@
+services:
+  qa-command-center:
+    build: .
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./config/config.yaml:/etc/qa-command-center/config.yaml:ro
+    environment:
+      NODE_ENV: production
+      QA_CENTER_CONFIG_PATH: /etc/qa-command-center/config.yaml

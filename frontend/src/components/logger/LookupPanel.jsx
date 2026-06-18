@@ -70,6 +70,7 @@ export default function LookupPanel({ onOpenPromotions, initialType, initialValu
             >
               <option value="dev">dev</option>
               <option value="staging">staging</option>
+              <option value="production">production</option>
             </select>
           </div>
           <div className="flex flex-col gap-1">
@@ -110,7 +111,7 @@ export default function LookupPanel({ onOpenPromotions, initialType, initialValu
             onClick={onOpenPromotions}
             className="text-sm text-blue-600 hover:underline"
           >
-            Open Promotions tab to draft a new coupon check →
+            Open Promotions tab to browse coupons →
           </button>
         )}
         <button

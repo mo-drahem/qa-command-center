@@ -9,6 +9,18 @@ describe('loggerController helpers', () => {
     assert.equal(cfg.headers['app-id'], '51');
   });
 
+  it('resolveLookupRequest builds sale URL with required headers', () => {
+    const cfg = resolveLookupRequest({
+      environment: 'staging',
+      lookupType: 'saleId',
+      value: 'sl-bf48ff7a-6cb6-4670-9fbc-8ee8d7cc038a',
+    });
+    assert.match(cfg.url, /tajawal-staging\.internal\/sale\/sl-bf48ff7a/);
+    assert.equal(cfg.headers['app-id'], undefined);
+    assert.equal(cfg.headers['x-currency'], 'SAR');
+    assert.equal(cfg.headers['x-skip-expiry-check'], 'true');
+  });
+
   it('buildFastTrackStepRequest requires cartId for add product', () => {
     assert.throws(
       () => buildFastTrackStepRequest({ environment: 'dev', stepId: 'addFlightProduct', runtime: {} }),

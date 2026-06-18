@@ -1,0 +1,59 @@
+# QA Command Center – deployment configuration
+# Copy to config.yaml, fill in secrets, and mount on the server.
+# Do NOT commit config.yaml (it contains secrets).
+
+server:
+  port: 4000
+  # Serve the built React UI from the same process (recommended for Docker/K8s)
+  serveFrontend: true
+
+secrets:
+  # Optional: require clients to send X-API-Key (or Authorization: Bearer) when set
+  qaCenterApiKey: ""
+  geminiApiKey: ""
+  copilotApiKey: ""
+  grafanaApiToken: ""
+
+logging:
+  devBaseUrl: http://oms-v3-logging-service.tajawal-dev.internal
+  stagingBaseUrl: http://oms-v3-logging-service.tajawal-staging.internal
+  # Optional: tracer log fetch when environment is production
+  productionBaseUrl: http://oms-v3-logging-service.tajawal-prod-apps.internal
+  defaultEnv: dev
+
+# Grafana / Loki — optional narrative log source (Explore → LogQL)
+grafana:
+  devBaseUrl: https://grafana.example.com
+  stagingBaseUrl: https://grafana-staging.example.com
+  productionBaseUrl: https://grafana-prod.example.com
+  # When set, queries go through Grafana datasource proxy instead of direct Loki
+  devDatasourceUid: loki-dev
+  stagingDatasourceUid: loki-staging
+  productionDatasourceUid: loki-prod
+  # {{tracerId}} is replaced when user searches by tracer ID
+  tracerLogqlTemplate: '{namespace="oms"} |~ "(?i){{tracerId}}"'
+  lookbackHours: 24
+
+ai:
+  geminiModel: gemini-3.1-flash-lite
+  geminiTimeoutMs: 90000
+  copilotModel: gpt-4o-mini
+
+fastTrack:
+  defaults:
+    appId: "51"
+    entityId: ALM
+    clientId: nibz
+    currency: SAR
+    userEmail: qa.user@example.com
+    userId: qa-user-id
+    userPhone: "+962795526409"
+
+oms:
+  # Optional overrides; leave empty to use dev/staging/production internal hostnames (tajawal-{dev|staging|prod-apps}.internal)
+  saleServiceBase: ""
+  orderServiceBase: ""
+  cartServiceBase: ""
+  checkoutServiceBase: ""
+  pricingCoreServiceBase: ""
+  pricingMdrServiceBase: ""

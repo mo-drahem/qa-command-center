@@ -4,11 +4,11 @@ QA Command Center is a web tool for QA teams to analyze OMS traces, generate AI 
 
 ## What It Does
 
-- Generate narrative reports from tracer logs (`dev`/`staging`).
+- Generate narrative reports from tracer logs (`dev` / `staging` / `production`).
 - Extract and display vital business data (app-id, email, totals, product context).
 - Run AI + deterministic math validation focused on pricing/totals structures.
 - Lookup OMS entities by order number, order id, cart id, or sale id.
-- Check coupon conflicts and simulate promotion risk.
+- Promotions tab: get rules/coupons and MDR export by rule id (pricing-core / pricing-mdr).
 - **Business Scenarios** — discrete OMS actions (rules, cart, sale) with editable request drafts and one-click execute.
 - Fast-track multi-step flows (legacy scenario runner).
 - Render request/response payloads with a code/tree JSON viewer.
@@ -55,15 +55,16 @@ examples/              # Bruno / curl exports — loaded at runtime
 |----------|------|
 | `examples/*.json` | **Runtime** cart/sale bodies (via `backend/src/lib/exampleFixtures.js`) |
 | `backend/src/fixtures/*.json` | Rule templates (`createRule.json`), checkout/coupon stubs, `newCartShell.json` |
-| `backend/.env` | Secrets and QA identity overrides (`FAST_TRACK_DEFAULT_*`) |
+| `backend/.env` | Local dev secrets and QA identity overrides (`FAST_TRACK_DEFAULT_*`) |
+| `config/config.yaml` | **Production** secrets and settings (mount on server; never commit) |
 
-Do not commit real PII or production data. Dev/staging only.
+Do not commit real PII or untrusted production data. Prefer dev/staging for exploratory work.
 
 ## Prerequisites
 
 - Node.js 18+ (recommended)
 - npm
-- Network access to internal OMS services (dev/staging hostnames)
+- Network access to internal OMS services (dev/staging/production hostnames when used)
 
 ## Setup
 
@@ -73,13 +74,21 @@ cd ../frontend && npm install
 cp backend/.env.example backend/.env
 ```
 
-Important `backend/.env` keys:
+For **local development**, keep using `backend/.env` (see keys below).
 
-- `LOGGING_API_DEV_BASE_URL`, `LOGGING_API_STAGING_BASE_URL`
-- `GEMINI_API_KEY`, `GEMINI_MODEL` (e.g. `gemini-3.1-flash-lite-preview`)
-- `FAST_TRACK_DEFAULT_APP_ID`, `FAST_TRACK_DEFAULT_ENTITY_ID`, `FAST_TRACK_DEFAULT_CLIENT_ID`
-- `FAST_TRACK_DEFAULT_USER_EMAIL`, `FAST_TRACK_DEFAULT_USER_ID`, `FAST_TRACK_DEFAULT_USER_PHONE`
-- Optional: `QA_CENTER_API_KEY`, `OMS_*_SERVICE_BASE` overrides
+For **server deployment**, use YAML instead:
+
+```bash
+cp config/config.example.yaml config/config.yaml
+# Edit config/config.yaml with real secrets and internal URLs
+```
+
+Important config keys (`.env` or `config/config.yaml`):
+
+- `LOGGING_API_DEV_BASE_URL`, `LOGGING_API_STAGING_BASE_URL`, `LOGGING_API_PRODUCTION_BASE_URL` / `logging.devBaseUrl`, `logging.stagingBaseUrl`, `logging.productionBaseUrl`
+- `GEMINI_API_KEY`, `GEMINI_MODEL` / `secrets.geminiApiKey`, `ai.geminiModel`
+- `FAST_TRACK_DEFAULT_*` / `fastTrack.defaults.*`
+- Optional: `QA_CENTER_API_KEY` / `secrets.qaCenterApiKey`, `OMS_*_SERVICE_BASE` / `oms.*ServiceBase`
 
 ## Run Locally
 
@@ -87,6 +96,69 @@ Important `backend/.env` keys:
 cd backend && npm run dev    # http://localhost:4000
 cd frontend && npm run dev   # http://localhost:5173
 ```
+
+## Deploy on Company Servers
+
+Production uses a **YAML config file** for secrets and settings. Environment variables override YAML when both are set (useful for Kubernetes secret injection).
+
+### 1. Create config
+
+```bash
+cp config/config.example.yaml config/config.yaml
+```
+
+Edit `config/config.yaml` — at minimum set:
+
+- `secrets.qaCenterApiKey` — API token clients must send as `X-API-Key` (recommended on shared servers)
+- `secrets.geminiApiKey` — for AI narrative / math validation
+- `logging.devBaseUrl` / `logging.stagingBaseUrl` / `logging.productionBaseUrl` — internal logging service URLs
+- `fastTrack.defaults.*` — QA user identity for cart/sale flows
+
+Never commit `config/config.yaml`.
+
+### 2. Docker (recommended)
+
+```bash
+docker build -t qa-command-center .
+docker run -d \
+  -p 4000:4000 \
+  -v /path/on/server/config.yaml:/etc/qa-command-center/config.yaml:ro \
+  qa-command-center
+```
+
+Or with Compose (expects `config/config.yaml` on the host):
+
+```bash
+docker compose up -d --build
+```
+
+The container serves the React UI and API on port **4000** (`server.serveFrontend: true`).
+
+### 3. Bare-metal / VM
+
+```bash
+cd frontend && npm ci && npm run build
+cd ../backend && npm ci --omit=dev
+export NODE_ENV=production
+export QA_CENTER_CONFIG_PATH=/etc/qa-command-center/config.yaml
+node backend/src/index.js
+```
+
+Mount or copy your `config.yaml` to `QA_CENTER_CONFIG_PATH`.
+
+### Config reference
+
+| YAML path | Env override | Purpose |
+|-----------|--------------|---------|
+| `server.port` | `PORT` | HTTP port (default 4000) |
+| `server.serveFrontend` | `SERVE_FRONTEND` | Serve built UI from backend |
+| `secrets.qaCenterApiKey` | `QA_CENTER_API_KEY` | Protect `/api` routes |
+| `secrets.geminiApiKey` | `GEMINI_API_KEY` | Gemini AI |
+| `secrets.copilotApiKey` | `COPILOT_API_KEY` | Optional Copilot fallback |
+| `logging.*` | `LOGGING_API_*` | Tracer logging hosts |
+| `ai.*` | `GEMINI_*`, `COPILOT_*` | AI model settings |
+| `fastTrack.defaults.*` | `FAST_TRACK_DEFAULT_*` | Default QA identity |
+| `oms.*ServiceBase` | `OMS_*_SERVICE_BASE` | OMS host overrides |
 
 ## Main API Endpoints
 
@@ -96,8 +168,11 @@ All routes under `/api/logger`:
 |----------|---------|
 | `POST /narrative` | AI narrative from tracer |
 | `POST /lookup` | OMS entity lookup |
-| `POST /coupon-conflicts` | Coupon conflict check |
-| `POST /promotion-risk` | Promotion risk simulation |
+| `POST /promotions/rules` | List pricing rules |
+| `POST /promotions/rule` | Get rule by id |
+| `POST /promotions/coupons` | List coupons |
+| `POST /promotions/coupon` | Get coupon by id |
+| `POST /promotions/mdr` | Get MDR export CSV for a rule |
 | `GET /business-actions` | Business Scenarios catalog |
 | `GET /business-actions/:actionId/draft` | Request template for an action |
 | `POST /business-actions/execute` | Execute action (proxy to OMS) |

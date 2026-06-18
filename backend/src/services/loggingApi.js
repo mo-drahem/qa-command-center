@@ -25,7 +25,7 @@ async function fetchLogs(tracerId, environment) {
   if (!baseUrl) {
     throw new Error(
       'Logging service base URL is not configured. ' +
-      'Set LOGGING_API_DEV_BASE_URL or LOGGING_API_STAGING_BASE_URL in your .env file.'
+      'Set LOGGING_API_DEV_BASE_URL, LOGGING_API_STAGING_BASE_URL, or LOGGING_API_PRODUCTION_BASE_URL in your .env or config.yaml.'
     );
   }
 
@@ -45,7 +45,7 @@ async function fetchLogs(tracerId, environment) {
     if (error && error.code === 'ENOTFOUND') {
       throw new Error(
         `Logging service host cannot be resolved: ${url}. ` +
-        'Check LOGGING_API_DEV_BASE_URL / LOGGING_API_STAGING_BASE_URL in backend/.env.'
+        'Check logging.devBaseUrl / logging.stagingBaseUrl / logging.productionBaseUrl in config.yaml or LOGGING_API_* env vars.'
       );
     }
     throw error;

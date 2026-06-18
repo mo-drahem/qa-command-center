@@ -41,7 +41,7 @@ export default function LoggerView() {
         <div className="text-center relative">
           <h1 className="text-3xl font-bold text-gray-900">🛠 QA Command Center</h1>
           <p className="mt-2 text-gray-500">
-            Narratives, OMS lookup, promotions QA, and business scenario actions (dev/staging).
+            Narratives, OMS lookup, pricing promotions, and business scenario actions (dev/staging/production).
           </p>
           <button
             type="button"
@@ -67,37 +67,37 @@ export default function LoggerView() {
           ))}
         </div>
 
-        {activeTab === 'narrative' && (
+        <div className={activeTab === 'narrative' ? undefined : 'hidden'}>
           <NarrativeTab
-            key={narrativeReload?.key || 'default'}
+            key={narrativeReload?.key ?? 'narrative-session'}
             initialTracerId={narrativeReload?.tracerId}
             initialEnvironment={narrativeReload?.environment}
             onVitalLookup={handleVitalLookup}
           />
-        )}
+        </div>
 
-        {activeTab === 'lookup' && (
+        <div className={activeTab === 'lookup' ? undefined : 'hidden'}>
           <LookupPanel
             key={`${lookupPrefill.type}-${lookupPrefill.value}`}
             initialType={lookupPrefill.type}
             initialValue={lookupPrefill.value}
             onOpenPromotions={handleOpenPromotions}
           />
-        )}
+        </div>
 
-        {activeTab === 'promotions' && (
+        <div className={activeTab === 'promotions' ? undefined : 'hidden'}>
           <PromotionsPanel
             environment={promoEnvironment}
             onEnvironmentChange={setPromoEnvironment}
           />
-        )}
+        </div>
 
-        {activeTab === 'businessScenarios' && (
+        <div className={activeTab === 'businessScenarios' ? undefined : 'hidden'}>
           <BusinessScenariosPanel
             environment={scenarioEnvironment}
             onEnvironmentChange={setScenarioEnvironment}
           />
-        )}
+        </div>
       </div>
 
       <SavedReportsDrawer

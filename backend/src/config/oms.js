@@ -1,16 +1,24 @@
 const { badRequest } = require('../lib/httpError');
 
 function normalizeEnvironment(environment) {
-  const env = String(environment || 'dev').trim().toLowerCase();
-  if (!['dev', 'staging'].includes(env)) {
-    throw badRequest('environment must be "dev" or "staging".');
+  let env = String(environment || 'dev').trim().toLowerCase();
+  if (env === 'prod') env = 'production';
+  if (!['dev', 'staging', 'production'].includes(env)) {
+    throw badRequest('environment must be "dev", "staging", or "production".');
   }
   return env;
 }
 
+/** Internal DNS segment for default OMS hostnames (tajawal-{suffix}.internal). */
+function omsInternalHostSuffix(normalizedEnv) {
+  if (normalizedEnv === 'staging') return 'staging';
+  if (normalizedEnv === 'production') return 'prod-apps';
+  return 'dev';
+}
+
 function getOmsLookupConfig(environment) {
   const env = normalizeEnvironment(environment);
-  const hostSuffix = env === 'staging' ? 'staging' : 'dev';
+  const hostSuffix = omsInternalHostSuffix(env);
   const { env: envVars } = require('./env');
   const defaults = {
     saleServiceBase: `http://oms-v3-sale-service.tajawal-${hostSuffix}.internal`,

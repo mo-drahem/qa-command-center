@@ -1,12 +1,15 @@
 const axios = require('axios');
 const { fetchLogs } = require('../services/loggingApi');
+const { fetchGrafanaLogs } = require('../services/grafanaLokiApi');
+const { parseGrafanaLogText } = require('../services/grafanaLogTextParser');
+const { badRequest, HttpError } = require('../lib/httpError');
 const { generateNarrative } = require('../services/aiNarrative');
+const { getGrafanaPublicConfig } = require('../config/grafana');
 const { validateLogsMathWithGemini } = require('../services/geminiMathValidator');
-const { checkCouponConflicts } = require('../services/couponConflictChecker');
-const { simulatePromotionRisk } = require('../services/promotionRiskSimulator');
-const { badRequest } = require('../lib/httpError');
+const promotionApi = require('../services/promotionApi');
 const { getOmsLookupConfig, normalizeEnvironment } = require('../config/oms');
 const { fastTrackIdentityDefaults } = require('../config/fastTrackDefaults');
+const { saleLookupHeaders } = require('../lib/cartHeaders');
 const { FAST_TRACK_SCENARIOS } = require('../config/fastTrackScenarios');
 const { BUSINESS_ACTIONS, BUSINESS_ACTION_CATEGORIES } = require('../config/businessActions');
 const {
@@ -49,7 +52,11 @@ function resolveLookupRequest({ environment, lookupType, value }) {
         },
       };
     case 'saleId':
-      return { url: `${cfg.saleServiceBase}/sale/${encoded}`, params: {}, headers: {} };
+      return {
+        url: `${cfg.saleServiceBase}/sale/${encoded}`,
+        params: {},
+        headers: saleLookupHeaders(),
+      };
     case 'couponCodes':
       return { url: `${cfg.pricingCoreServiceBase}/coupon`, params: {}, headers: {} };
     default:
@@ -88,13 +95,71 @@ function resolveBusinessScenarioStep({ environment, step, saleId, cartId, appId 
   }
 }
 
+function getGrafanaConfig(req, res) {
+  const env = normalizeEnvironment(req.query.environment);
+  res.json({
+    environment: env,
+    grafana: getGrafanaPublicConfig(env),
+  });
+}
+
 async function postNarrative(req, res, next) {
   try {
-    const tracerId = req.body.tracerId.trim();
     const env = normalizeEnvironment(req.body.environment);
-    const logs = await fetchLogs(tracerId, env);
+    const focusPrompt =
+      typeof req.body.focusPrompt === 'string' ? req.body.focusPrompt.trim() : '';
+    const pastedLogs = Array.isArray(req.body.logs) ? req.body.logs : null;
+    const pastedLogText =
+      typeof req.body.logText === 'string' ? req.body.logText.trim() : '';
+    const isGrafanaSource = req.body.source === 'grafana';
+    let tracerId = typeof req.body.tracerId === 'string' && req.body.tracerId.trim()
+      ? req.body.tracerId.trim()
+      : pastedLogs
+        ? 'pasted-json'
+        : pastedLogText
+          ? 'pasted-logs'
+          : isGrafanaSource
+            ? 'grafana-query'
+            : '';
+    let logs;
+    let logSource = 'logging-api';
+    let grafanaMeta = null;
+
+    if (pastedLogs?.length) {
+      logs = pastedLogs;
+      logSource = 'pasted-json';
+    } else if (pastedLogText) {
+      logs = parseGrafanaLogText(pastedLogText);
+      if (!logs.length) {
+        throw badRequest('Could not parse any log lines from logText.');
+      }
+      logSource = 'grafana-paste';
+    } else if (isGrafanaSource) {
+      const grafanaResult = await fetchGrafanaLogs({
+        environment: env,
+        tracerId: tracerId === 'grafana-query' ? '' : tracerId,
+        grafanaQuery: req.body.grafanaQuery,
+        from: req.body.from,
+        to: req.body.to,
+      });
+      logs = grafanaResult.logs;
+      logSource = 'grafana';
+      grafanaMeta = {
+        query: grafanaResult.query,
+        lineCount: grafanaResult.lineCount,
+        sourceUrl: grafanaResult.sourceUrl,
+        timeRange: grafanaResult.timeRange,
+      };
+      if (!tracerId || tracerId === 'grafana-query') {
+        tracerId = `grafana:${grafanaResult.query.slice(0, 80)}`;
+      }
+    } else {
+      logs = await fetchLogs(tracerId, env);
+    }
+
+    const narrativeOptions = { logSource, ...(focusPrompt ? { focusPrompt } : {}) };
     const [narrativeResult, mathValidationResult] = await Promise.allSettled([
-      generateNarrative(logs),
+      generateNarrative(logs, narrativeOptions),
       validateLogsMathWithGemini(logs),
     ]);
     const narrative =
@@ -118,8 +183,11 @@ async function postNarrative(req, res, next) {
     res.json({
       tracerId,
       environment: env,
+      logSource,
+      grafana: grafanaMeta,
       story: narrative.story,
       insights: narrative.insights || null,
+      conclusion: narrative.insights?.conclusion || null,
       aiProvider: narrative.provider || 'fallback',
       aiReason: narrative.reason || null,
       tokenUsage: narrative.tokenUsage || null,
@@ -135,10 +203,11 @@ async function postNarrative(req, res, next) {
 }
 
 async function postLookup(req, res, next) {
+  let reqConfig;
   try {
     const { lookupType, value } = req.body || {};
     const env = normalizeEnvironment(req.body.environment);
-    const reqConfig = resolveLookupRequest({
+    reqConfig = resolveLookupRequest({
       environment: env,
       lookupType,
       value: typeof value === 'string' ? value.trim() : '',
@@ -156,45 +225,85 @@ async function postLookup(req, res, next) {
       data: response.data,
     });
   } catch (error) {
+    if (error?.response) {
+      const upstream = error.response.data;
+      const message =
+        (typeof upstream === 'object' && upstream !== null
+          ? upstream.message || upstream.error
+          : null) ||
+        (typeof upstream === 'string' ? upstream : null) ||
+        error.message;
+      return next(
+        new HttpError(error.response.status, message, {
+          sourceUrl: reqConfig?.url,
+          upstreamStatus: error.response.status,
+        })
+      );
+    }
     next(error);
   }
 }
 
-async function postCouponConflicts(req, res, next) {
+async function postPromotionRules(req, res, next) {
   try {
     const env = normalizeEnvironment(req.body.environment);
-    const { newCoupon } = req.body || {};
-    if (!newCoupon || typeof newCoupon !== 'object' || Array.isArray(newCoupon)) {
-      throw badRequest('newCoupon is required and must be a JSON object.');
-    }
-    const result = await checkCouponConflicts({ environment: env, newCoupon });
+    const result = await promotionApi.getRules({ environment: env, runtime: req.body.runtime });
     res.json({ environment: env, ...result });
   } catch (error) {
     next(error);
   }
 }
 
-async function postPromotionRisk(req, res, next) {
+async function postPromotionRuleById(req, res, next) {
   try {
     const env = normalizeEnvironment(req.body.environment);
-    const { newRule, activeRules } = req.body || {};
-    if (!newRule || typeof newRule !== 'string' || !newRule.trim()) {
-      throw badRequest('newRule is required and must be a non-empty string.');
-    }
-    if (!activeRules || typeof activeRules !== 'string' || !activeRules.trim()) {
-      throw badRequest('activeRules is required and must be a non-empty string.');
-    }
-    const simulation = await simulatePromotionRisk({
+    const { ruleId } = req.body || {};
+    const result = await promotionApi.getRuleById({
       environment: env,
-      newRule: newRule.trim(),
-      activeRules: activeRules.trim(),
+      ruleId,
+      runtime: req.body.runtime,
     });
-    res.json({
+    res.json({ environment: env, ...result });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function postPromotionCoupons(req, res, next) {
+  try {
+    const env = normalizeEnvironment(req.body.environment);
+    const result = await promotionApi.getCoupons({ environment: env, runtime: req.body.runtime });
+    res.json({ environment: env, ...result });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function postPromotionCouponById(req, res, next) {
+  try {
+    const env = normalizeEnvironment(req.body.environment);
+    const { couponId } = req.body || {};
+    const result = await promotionApi.getCouponById({
       environment: env,
-      provider: simulation.provider,
-      reason: simulation.reason,
-      result: simulation.result,
+      couponId,
+      runtime: req.body.runtime,
     });
+    res.json({ environment: env, ...result });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function postPromotionMdr(req, res, next) {
+  try {
+    const env = normalizeEnvironment(req.body.environment);
+    const { ruleId } = req.body || {};
+    const result = await promotionApi.getMdrOfRule({
+      environment: env,
+      ruleId,
+      runtime: req.body.runtime,
+    });
+    res.json({ environment: env, ...result });
   } catch (error) {
     next(error);
   }
@@ -315,10 +424,14 @@ async function executeFastTrack(req, res, next) {
 }
 
 module.exports = {
+  getGrafanaConfig,
   postNarrative,
   postLookup,
-  postCouponConflicts,
-  postPromotionRisk,
+  postPromotionRules,
+  postPromotionRuleById,
+  postPromotionCoupons,
+  postPromotionCouponById,
+  postPromotionMdr,
   postBusinessScenarioStep,
   getFastTrackScenarios,
   getAddFlightTemplate,

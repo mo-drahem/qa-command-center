@@ -18,8 +18,11 @@ import {
 } from './NarrativePanels';
 
 export default function NarrativeTab({ onVitalLookup, initialTracerId, initialEnvironment }) {
+  const [inputMode, setInputMode] = useState('tracer');
   const [tracerId, setTracerId] = useState(initialTracerId || '');
   const [environment, setEnvironment] = useState(initialEnvironment || 'dev');
+  const [focusPrompt, setFocusPrompt] = useState('');
+  const [pastedLogText, setPastedLogText] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [narrativeApiPayload, setNarrativeApiPayload] = useState(null);
@@ -35,7 +38,12 @@ export default function NarrativeTab({ onVitalLookup, initialTracerId, initialEn
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!tracerId.trim()) {
+    if (inputMode === 'paste') {
+      if (!pastedLogText.trim()) {
+        toast.error('Paste log text copied from Grafana.');
+        return;
+      }
+    } else if (!tracerId.trim()) {
       toast.error('Please enter a Tracer ID.');
       return;
     }
@@ -43,7 +51,10 @@ export default function NarrativeTab({ onVitalLookup, initialTracerId, initialEn
     setResult(null);
     setNarrativeApiPayload(null);
     try {
-      const data = await generateNarrative(tracerId.trim(), environment);
+      const data = await generateNarrative(tracerId.trim(), environment, {
+        focusPrompt: focusPrompt.trim() || undefined,
+        logText: inputMode === 'paste' ? pastedLogText : undefined,
+      });
       setResult(data);
       setNarrativeApiPayload(data);
       setNarrativeApiStatus('success');
@@ -81,36 +92,129 @@ export default function NarrativeTab({ onVitalLookup, initialTracerId, initialEn
         onSubmit={handleSubmit}
         className="bg-white rounded-2xl shadow p-6 border border-gray-100 space-y-4"
       >
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex flex-col gap-1 sm:w-40">
-            <label className="text-sm font-medium text-gray-600" htmlFor="environment">
-              Environment
-            </label>
-            <select
-              id="environment"
-              value={environment}
-              onChange={(e) => setEnvironment(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-            >
-              <option value="dev">dev</option>
-              <option value="staging">staging</option>
-            </select>
-          </div>
-          <div className="flex flex-col gap-1 flex-1">
-            <label className="text-sm font-medium text-gray-600" htmlFor="tracerId">
-              Tracer ID
-            </label>
-            <input
-              id="tracerId"
-              type="text"
-              value={tracerId}
-              onChange={(e) => setTracerId(e.target.value)}
-              placeholder="e.g. abc-123-xyz"
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
-            />
-          </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setInputMode('tracer')}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${
+              inputMode === 'tracer'
+                ? 'bg-blue-50 border-blue-300 text-blue-700'
+                : 'bg-white border-gray-300 text-gray-600'
+            }`}
+          >
+            Tracer ID
+          </button>
+          <button
+            type="button"
+            onClick={() => setInputMode('paste')}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${
+              inputMode === 'paste'
+                ? 'bg-blue-50 border-blue-300 text-blue-700'
+                : 'bg-white border-gray-300 text-gray-600'
+            }`}
+          >
+            Grafana logs
+          </button>
         </div>
-        <CurlPreview tracerId={tracerId} environment={environment} />
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col gap-1 sm:w-auto sm:shrink-0">
+            <span className="text-sm font-medium text-gray-600" id="narrative-environment-label">
+              Environment
+            </span>
+            <div
+              className="flex flex-wrap rounded-lg border border-gray-300 p-0.5 bg-gray-50 gap-0.5"
+              role="group"
+              aria-labelledby="narrative-environment-label"
+            >
+              <button
+                type="button"
+                onClick={() => setEnvironment('dev')}
+                className={`flex-1 min-w-[4rem] px-2.5 py-2 rounded-md text-sm font-medium transition-colors ${
+                  environment === 'dev'
+                    ? 'bg-white shadow-sm text-blue-700 ring-1 ring-gray-200/80'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                dev
+              </button>
+              <button
+                type="button"
+                onClick={() => setEnvironment('staging')}
+                className={`flex-1 min-w-[4rem] px-2.5 py-2 rounded-md text-sm font-medium transition-colors ${
+                  environment === 'staging'
+                    ? 'bg-white shadow-sm text-blue-700 ring-1 ring-gray-200/80'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                staging
+              </button>
+              <button
+                type="button"
+                onClick={() => setEnvironment('production')}
+                className={`flex-1 min-w-[4rem] px-2.5 py-2 rounded-md text-sm font-medium transition-colors ${
+                  environment === 'production'
+                    ? 'bg-white shadow-sm text-blue-700 ring-1 ring-gray-200/80'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                production
+              </button>
+            </div>
+          </div>
+          {inputMode === 'tracer' ? (
+            <div className="flex flex-col gap-1 flex-1">
+              <label className="text-sm font-medium text-gray-600" htmlFor="tracerId">
+                Tracer ID
+              </label>
+              <input
+                id="tracerId"
+                type="text"
+                value={tracerId}
+                onChange={(e) => setTracerId(e.target.value)}
+                placeholder="e.g. abc-123-xyz"
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1 flex-1">
+              <label className="text-sm font-medium text-gray-600" htmlFor="pastedLogText">
+                Log text from Grafana
+              </label>
+              <textarea
+                id="pastedLogText"
+                value={pastedLogText}
+                onChange={(e) => setPastedLogText(e.target.value)}
+                placeholder="Paste lines copied from Grafana Explore (plain text, JSON lines, or a JSON array)"
+                rows={10}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono"
+              />
+            </div>
+          )}
+        </div>
+        {inputMode === 'paste' && (
+          <p className="text-xs text-gray-500">
+            Copy log lines from Grafana Explore and paste here. No Grafana connection is required — the server
+            parses the text and runs the same AI investigation.
+          </p>
+        )}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-gray-600" htmlFor="focusPrompt">
+            Focus instructions for the AI Agent(optional)
+          </label>
+          <textarea
+            id="focusPrompt"
+            value={focusPrompt}
+            onChange={(e) => setFocusPrompt(e.target.value)}
+            placeholder="e.g. Only validate VAT on the flight product, or compare grandTotals between cart and checkout"
+            rows={3}
+            maxLength={2000}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          />
+          <p className="text-xs text-gray-500">
+            Steers the AI on top of the default analysis. The pasted logs remain the source of truth.
+          </p>
+        </div>
+        {inputMode === 'tracer' && <CurlPreview tracerId={tracerId} environment={environment} />}
         <button
           type="submit"
           disabled={loading}
@@ -134,7 +238,18 @@ export default function NarrativeTab({ onVitalLookup, initialTracerId, initialEn
                 {result.environment}
               </span>
               <span className="text-gray-500 text-sm font-mono">Tracer: {result.tracerId}</span>
+              {result.logSource === 'grafana-paste' && (
+                <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-sm font-medium">
+                  Pasted logs
+                </span>
+              )}
             </div>
+            {result.conclusion && (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+                <p className="font-semibold mb-1">Investigation conclusion</p>
+                <p>{result.conclusion}</p>
+              </div>
+            )}
             {result.tokenUsage?.totalTokens > 0 && (
               <div className="flex flex-wrap gap-2 text-xs">
                 <span className="px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 font-semibold">
